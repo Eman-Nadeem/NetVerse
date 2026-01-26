@@ -1,6 +1,7 @@
 import User from '../models/User.js';
 import { generateToken, generateResetToken } from '../utils/jwt.js';
 import { ErrorResponse } from '../middleware/errorHandler.js';
+import { sendResetPasswordEmail } from '../utils/email.js';
 import crypto from 'node:crypto';
 
 // @desc    Register a new user
@@ -162,20 +163,25 @@ export const forgotPassword = async (req, res, next) => {
     user.resetPasswordExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
     await user.save();
 
-    // In a real application, you would send an email here
-    // For demo purposes, we'll return the reset token in the response
-    // Remove this in production and send via email instead
+    // Send reset password email
+    const emailSent = await sendResetPasswordEmail(user.email, resetToken, user.name);
+
+    // Prepare response
+    const responseData = {
+      message: emailSent 
+        ? 'Password reset email sent successfully' 
+        : 'Password reset token generated (email not configured)',
+    };
+
+    // Only include reset token in development mode for testing
+    if (process.env.NODE_ENV === 'development') {
+      responseData.resetToken = resetToken;
+    }
+
     res.status(200).json({
       success: true,
-      message: 'Password reset token generated',
-      data: {
-        // Only in development/demo - remove in production
-        resetToken: process.env.NODE_ENV === 'development' ? resetToken : undefined,
-      },
+      ...responseData,
     });
-
-    // TODO: Send email with reset token
-    // await sendResetPasswordEmail(user.email, resetToken);
   } catch (error) {
     next(error);
   }
