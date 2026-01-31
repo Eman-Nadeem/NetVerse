@@ -3,6 +3,8 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 import authRoutes from './routes/authRoutes.js';
+import userRoutes from './routes/userRoutes.js';
+import postRoutes from './routes/postRoutes.js';
 
 dotenv.config(); //load .env variables
 
@@ -18,6 +20,8 @@ app.use(express.urlencoded({ extended: true }));
 
 //Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/posts', postRoutes);
 
 //Error Handling Middleware (should be the last middleware)
 app.use(notFound); // 404 Not Found

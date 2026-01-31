@@ -2,7 +2,6 @@ import User from '../models/User.js';
 import Post from '../models/Post.js';
 import Story from '../models/Story.js';
 import Notification from '../models/Notification.js';
-import { ErrorResponse } from '../middleware/errorHandler.js';
 import { uploadAvatar, uploadImage, deleteFromCloudinary } from '../utils/cloudinary.js';
 
 // @desc    Get user profile

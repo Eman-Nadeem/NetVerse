@@ -9,10 +9,10 @@ import {
   getUserPosts,
   toggleSavePost,
   getSavedPosts,
-} from '../controllers/user.js';
+} from '../controllers/userController.js';
 import { protect, optionalAuth } from '../middleware/auth.js';
-import { validateUpdateProfile, uploadSingle } from '../middleware/upload.js';
-import { handleUploadError } from '../middleware/upload.js';
+import { validateUpdateProfile } from '../middleware/validator.js';
+import { handleUploadError, uploadSingle } from '../middleware/upload.js';
 
 const router = express.Router();
 

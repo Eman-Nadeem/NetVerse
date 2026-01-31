@@ -58,6 +58,53 @@ export const validateLogin = [
   validate,
 ];
 
+// Post validation
+export const validatePost = [
+  body('content')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Post content cannot be more than 2000 characters'),
+  validate,
+];
+
+// Comment validation
+export const validateComment = [
+  body('content')
+    .trim()
+    .notEmpty()
+    .withMessage('Comment content is required')
+    .isLength({ max: 1000 })
+    .withMessage('Comment cannot be more than 1000 characters'),
+  validate,
+];
+
+// Update profile validation
+export const validateUpdateProfile = [
+  body('name')
+    .optional()
+    .trim()
+    .isLength({ min: 2, max: 50 })
+    .withMessage('Name must be between 2 and 50 characters'),
+  body('username')
+    .optional()
+    .trim()
+    .isLength({ min: 3, max: 20 })
+    .withMessage('Username must be between 3 and 20 characters')
+    .matches(/^[a-zA-Z0-9_]+$/)
+    .withMessage('Username can only contain letters, numbers, and underscores'),
+  body('bio')
+    .optional()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage('Bio cannot be more than 500 characters'),
+  body('website')
+    .optional()
+    .isURL()
+    .withMessage('Website must be a valid URL'),
+  validate,
+];
+
 // Forgot password validation
 export const validateForgotPassword = [
   body('email')
