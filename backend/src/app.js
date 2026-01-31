@@ -5,6 +5,7 @@ import { errorHandler, notFound } from './middleware/errorHandler.js';
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import postRoutes from './routes/postRoutes.js';
+import storyRoutes from './routes/storyRoutes.js';
 
 dotenv.config(); //load .env variables
 
@@ -22,6 +23,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/posts', postRoutes);
+app.use('/api/stories', storyRoutes);
 
 //Error Handling Middleware (should be the last middleware)
 app.use(notFound); // 404 Not Found

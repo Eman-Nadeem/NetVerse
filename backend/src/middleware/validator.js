@@ -126,3 +126,13 @@ export const validateResetPassword = [
     .withMessage('Password must be at least 6 characters'),
   validate,
 ];
+
+// Story validation
+export const validateStory = [
+  body('caption')
+    .optional()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage('Caption cannot be more than 500 characters'),
+  validate,
+];
