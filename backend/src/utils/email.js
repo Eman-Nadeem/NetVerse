@@ -124,7 +124,7 @@ export const sendResetPasswordEmail = async (email, resetToken, userName = 'User
         <body>
           <div class="container">
             <div class="header">
-              <h1>🔐 NetVerse</h1>
+              <h1>NetVerse</h1>
             </div>
             <div class="content">
               <p class="greeting">Hello ${userName},</p>
@@ -165,19 +165,17 @@ export const sendResetPasswordEmail = async (email, resetToken, userName = 'User
 };
 
 // Send welcome email
-export const sendWelcomeEmail = async (email, userName) => {
+export const sendWelcomeEmail = async (email, userName = 'User') => {
   const transporter = createTransporter();
-  
   if (!transporter) {
-    console.log('Email transporter not configured. Skipping email send.');
+    console.log('Email transporter not configured. Skipping welcome email send.');
     return false;
   }
-
   try {
     const mailOptions = {
-      from: process.env.EMAIL_FROM || `"NetVerse" <${process.env.EMAIL_USER}>`,
+      from: process.env.EMAIL_FROM,
       to: email,
-      subject: 'Welcome to NetVerse! 🎉',
+      subject: 'Welcome to NetVerse!',
       html: `
         <!DOCTYPE html>
         <html lang="en">
@@ -186,122 +184,37 @@ export const sendWelcomeEmail = async (email, userName) => {
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>Welcome to NetVerse</title>
           <style>
-            body {
-              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-              line-height: 1.6;
-              color: #333;
-              max-width: 600px;
-              margin: 0 auto;
-              padding: 20px;
-            }
-            .container {
-              background: #ffffff;
-              border-radius: 8px;
-              box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-              overflow: hidden;
-            }
-            .header {
-              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-              padding: 30px;
-              text-align: center;
-              color: white;
-            }
-            .header h1 {
-              margin: 0;
-              font-size: 28px;
-              font-weight: 600;
-            }
-            .content {
-              padding: 40px 30px;
-            }
-            .greeting {
-              font-size: 18px;
-              margin-bottom: 20px;
-              color: #555;
-            }
-            .message {
-              margin-bottom: 20px;
-              color: #666;
-            }
-            .features {
-              background: #f8f9fa;
-              padding: 20px;
-              border-radius: 6px;
-              margin: 20px 0;
-            }
-            .features ul {
-              margin: 0;
-              padding-left: 20px;
-            }
-            .features li {
-              margin: 10px 0;
-              color: #555;
-            }
-            .button-container {
-              text-align: center;
-              margin: 30px 0;
-            }
-            .cta-button {
-              display: inline-block;
-              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-              color: white !important;
-              padding: 14px 32px;
-              text-decoration: none;
-              border-radius: 6px;
-              font-weight: 600;
-              font-size: 16px;
-            }
-            .footer {
-              background: #f8f9fa;
-              padding: 20px;
-              text-align: center;
-              font-size: 14px;
-              color: #999;
-            }
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+            .container { background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden; }
+            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; color: white; }
+            .header h1 { margin: 0; font-size: 28px; font-weight: 600; }
+            .content { padding: 40px 30px; }
+            .greeting { font-size: 18px; margin-bottom: 20px; color: #555; }
+            .message { font-size: 16px; margin-bottom: 30px; }
           </style>
         </head>
         <body>
           <div class="container">
             <div class="header">
-              <h1>🎉 Welcome to NetVerse!</h1>
+              <h1>Welcome to NetVerse!</h1>
             </div>
             <div class="content">
-              <p class="greeting">Hello ${userName},</p>
-              <p class="message">
-                We're thrilled to have you join our community! Your account has been successfully created, 
-                and you're all set to start connecting with others.
-              </p>
-              <div class="features">
-                <strong>Here's what you can do with NetVerse:</strong>
-                <ul>
-                  <li>📝 Create and share posts</li>
-                  <li>📸 Share stories that expire in 24 hours</li>
-                  <li>👥 Follow and connect with others</li>
-                  <li>💬 Chat in real-time</li>
-                  <li>❤️ Like and comment on posts</li>
-                </ul>
+              <div class="greeting">Hello ${userName},</div>
+              <div class="message">
+                Thank you for registering at NetVerse. We're excited to have you join our community!<br><br>
+                If you have any questions or feedback, just reply to this email.<br><br>
+                Enjoy exploring NetVerse!
               </div>
-              <div class="button-container">
-                <a href="${process.env.CLIENT_URL || 'http://localhost:3000'}" class="cta-button">Get Started</a>
-              </div>
-              <p class="message">
-                If you have any questions or need help, don't hesitate to reach out to our support team.
-              </p>
-            </div>
-            <div class="footer">
-              <p>&copy; ${new Date().getFullYear()} NetVerse. All rights reserved.</p>
             </div>
           </div>
         </body>
         </html>
       `,
     };
-
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Welcome email sent:', info.messageId);
+    await transporter.sendMail(mailOptions);
     return true;
   } catch (error) {
-    console.error('Error sending welcome email:', error);
+    console.error('Send welcome email error:', error);
     return false;
   }
 };

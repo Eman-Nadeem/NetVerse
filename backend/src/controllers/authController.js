@@ -1,7 +1,7 @@
 import User from '../models/User.js';
 import { generateToken, generateResetToken } from '../utils/jwt.js';
 import { ErrorResponse } from '../middleware/errorHandler.js';
-import { sendResetPasswordEmail } from '../utils/email.js';
+import { sendResetPasswordEmail, sendWelcomeEmail } from '../utils/email.js';
 import crypto from 'node:crypto';
 
 // @desc    Register a new user
@@ -37,6 +37,8 @@ export const register = async (req, res, next) => {
       email,
       password,
     });
+    // Send welcome email
+    await sendWelcomeEmail(user.email, user.name);
     console.log('User created:', user._id);
 
     // Generate token
