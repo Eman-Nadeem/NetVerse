@@ -7,6 +7,7 @@ import userRoutes from './routes/userRoutes.js';
 import postRoutes from './routes/postRoutes.js';
 import storyRoutes from './routes/storyRoutes.js';
 import chatRoutes from './routes/chatRoute.js';
+import notificationRoutes from './routes/notificationRoute.js';
 
 dotenv.config(); //load .env variables
 
@@ -26,6 +27,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/stories', storyRoutes);
 app.use('/api/chats', chatRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 //Error Handling Middleware (should be the last middleware)
 app.use(notFound); // 404 Not Found
