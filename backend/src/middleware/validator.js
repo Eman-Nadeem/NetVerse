@@ -136,3 +136,22 @@ export const validateStory = [
     .withMessage('Caption cannot be more than 500 characters'),
   validate,
 ];
+
+// Message validation
+export const validateMessage = [
+  body('content')
+    .trim()
+    .notEmpty()
+    .withMessage('Message content is required'),
+  validate,
+];
+
+// ID parameter validation
+export const validateId = [
+  param('id')
+    .notEmpty()
+    .withMessage('ID is required')
+    .isMongoId()
+    .withMessage('Invalid ID format'),
+  validate,
+];
