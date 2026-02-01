@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+/* 1. Define your custom theme variables */
+:root {
+  --color-brand: #6366f1; /* Your Netverse signature color */
+}
+
+/* 2. Global Base Styles */
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900;
+    @apply dark:bg-zinc-950 dark:text-zinc-100;
+    @apply transition-colors duration-300;
+  }
+}
