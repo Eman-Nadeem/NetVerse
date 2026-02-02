@@ -1,10 +1,13 @@
 import React from 'react';
-import { Search, Bell, MessageCircleHeartIcon } from 'lucide-react'; // Icons library
+import { Search, Bell, MessageCircleHeartIcon, Moon, Sun } from 'lucide-react'; // Icons library
 import { Link } from 'react-router-dom';
 import { Avatar } from '../ui/Avatar.jsx';
+import { useThemeStore } from '../../store/themeStore';
 import { Button } from '../ui/Button.jsx';
 
 export const Navbar = ({ toggleSidebar }) => {
+  const theme = useThemeStore((state) => state.theme);
+  const toggleTheme = useThemeStore((state) => state.toggleTheme);
   return (
     // header stays at the top even when scrolling
     // backdrop-blur-md gives a frosted glass effect (glassmorphism)
@@ -28,19 +31,33 @@ export const Navbar = ({ toggleSidebar }) => {
 
       {/* Right Actions */}
       <div className="flex items-center gap-1 md:gap-4">
+        {/* Dark mode toggle */}
+        <Button
+          variant="ghost"
+          aria-label="Toggle dark mode"
+          className="px-2 rounded-full"
+          onClick={toggleTheme}
+        >
+          {theme === 'light' ? (
+            <Moon className="w-5 h-5 text-indigo-400" />
+          ) : (
+            <Sun className="w-5 h-5 text-orange-500" />
+          )}
+        </Button>
+
         <Link to="/notifications" className="rounded-full">
-          <Button className="" variant="ghost">
+            <Button className="px-2" variant="ghost">
               <Bell className="w-5 h-5 text-slate-600 dark:text-zinc-400" />
-          </Button>
+            </Button>
         </Link>
 
         <Link
           to="/chats"
           className="md:hidden rounded-full"
         >
-          <Button className="" variant="ghost">
+            <Button className="px-2" variant="ghost">
               <MessageCircleHeartIcon className="w-5 h-5 text-slate-600 dark:text-zinc-400" />
-          </Button>
+            </Button>
         </Link>
         <Avatar
           src="https://i.pravatar.cc/150?img=32"

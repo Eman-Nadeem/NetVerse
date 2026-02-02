@@ -14,7 +14,7 @@ const App = () => {
       {/* Protected Routes: Wrapped in Layout */}
       <Route path="/" element={<Layout />}>
         <Route index element={<Home />} />
-        <Route path="profile" element={<Profile />} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="settings" element={<Profile />} /> {/* Reuse Profile for settings demo */}
         
         {/* Catch all for internal routes -> redirect to Home */}

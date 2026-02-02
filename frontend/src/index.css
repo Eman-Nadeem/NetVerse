@@ -5,6 +5,8 @@
   --color-brand: #6366f1; /* Your Netverse signature color */
 }
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* 2. Global Base Styles */
 @layer base {
   body {

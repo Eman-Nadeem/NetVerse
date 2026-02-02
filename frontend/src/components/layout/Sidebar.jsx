@@ -27,7 +27,7 @@ export const Sidebar = ({ isOpen, onClose }) => {
         isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
       )}>
         <div className="p-6 flex items-center gap-2">
-          <h1 className="text-2xl font-bold bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-2xl font-bold bg-linear-to-r from-indigo-600 to-purple-500 bg-clip-text text-transparent">
             NetVerse
           </h1>
         </div>
