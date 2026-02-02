@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Outlet } from 'react-router-dom';
 import { Navbar } from './Navbar';
 import { Sidebar } from './Sidebar';
 import { BottomBar } from './BottomBar';
@@ -25,7 +26,7 @@ export const Layout = ({ children }) => {
           <Navbar toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
           
           <main className="flex-1 max-w-3xl w-full mx-auto p-4 pb-24 md:pb-8">
-            {children}
+            <Outlet />
           </main>
         </div>
       </div>

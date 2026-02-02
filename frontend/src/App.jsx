@@ -1,18 +1,29 @@
-import React from 'react'
-import { Layout } from './components/layout/Layout'
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { Layout } from './components/layout/Layout';
+import Login from './pages/Login';
+import Home from './pages/Home';
+import Profile from './pages/Profile';
 
 const App = () => {
   return (
-    <Layout>
-      <div className="flex flex-col items-center justify-center py-20 space-y-4">
-        <h1 className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">
-          Phase 3 Complete
-        </h1>
-        <p className="text-slate-500 dark:text-zinc-400">
-          Layout Shell is active. Try resizing the window!
-        </p>
-      </div>
-    </Layout>
+    <Routes>
+      {/* Public Route: Login (Standalone, no Layout) */}
+      <Route path="/login" element={<Login />} />
+
+      {/* Protected Routes: Wrapped in Layout */}
+      <Route path="/" element={<Layout />}>
+        <Route index element={<Home />} />
+        <Route path="profile" element={<Profile />} />
+        <Route path="settings" element={<Profile />} /> {/* Reuse Profile for settings demo */}
+        
+        {/* Catch all for internal routes -> redirect to Home */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Route>
+
+      {/* Global Catch all -> redirect to Login */}
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </Routes>
   )
 }
 
