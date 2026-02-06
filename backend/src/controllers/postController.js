@@ -88,6 +88,13 @@ export const getFeed = async (req, res, next) => {
       privacy: { $in: ['public', 'friends'] },
     })
       .populate('author', '_id name username avatar')
+      .populate({
+        path: 'comments',
+        populate: {
+          path: 'user',
+          select: '_id name username avatar',
+        },
+      })
       .sort({ createdAt: -1 })
       .limit(limit)
       .skip((page - 1) * limit);

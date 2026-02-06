@@ -15,3 +15,12 @@
     @apply transition-colors duration-300;
   }
 }
+
+/* Custom scrollbar-hide utility */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none;     /* Firefox */
+}

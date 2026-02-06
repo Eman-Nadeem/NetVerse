@@ -9,6 +9,7 @@ const Home = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [openCommentsPostId, setOpenCommentsPostId] = useState(null);
 
   // Fetch current user info
   useEffect(() => {
@@ -55,7 +56,14 @@ const Home = () => {
         <div>
           {posts.length > 0 ? (
             posts.map((post) => (
-              <PostCard key={post._id} post={post} onUpdate={fetchPosts} currentUserId={currentUserId} />
+              <PostCard
+                key={post._id}
+                post={post}
+                onUpdate={fetchPosts}
+                currentUserId={currentUserId}
+                showComments={openCommentsPostId === post._id}
+                onToggleComments={() => setOpenCommentsPostId(openCommentsPostId === post._id ? null : post._id)}
+              />
             ))
           ) : (
             // Beautiful Empty State
