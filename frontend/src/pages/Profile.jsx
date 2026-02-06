@@ -10,6 +10,7 @@ const Profile = () => {
   const [user, setUser] = useState(null);
   const [posts, setPosts] = useState([]);
   const [selectedTab, setSelectedTab] = useState('posts');
+  const [openCommentsPostId, setOpenCommentsPostId] = useState(null);
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -149,7 +150,13 @@ const Profile = () => {
           {selectedTab === 'posts' && (
             <div className="flex flex-col gap-4">
               {posts.map((post) => (
-                <PostCard key={post._id} post={post} currentUserId={user._id} />
+                <PostCard
+                  key={post._id}
+                  post={post}
+                  currentUserId={user._id}
+                  showComments={openCommentsPostId === post._id}
+                  onToggleComments={() => setOpenCommentsPostId(openCommentsPostId === post._id ? null : post._id)}
+                />
               ))}
             </div>
           )}

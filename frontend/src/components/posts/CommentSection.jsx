@@ -36,12 +36,12 @@ export const CommentSection = ({ postId, comments: initialComments, onUpdate }) 
 
   return (
     <div className="bg-slate-50 dark:bg-zinc-900/50 p-4 space-y-4">
-      {/* Existing Comments List */}
+      {/* Existing Comments List , shown in reverse order: latest first */} 
       <div className="space-y-4 max-h-60 overflow-y-auto scrollbar-hide">
         {comments.length === 0 ? (
           <p className="text-sm text-slate-500 dark:text-zinc-400 text-center py-2">No comments yet. Be the first!</p>
         ) : (
-          comments.map((comment) => (
+          [...comments].reverse().map((comment) => (
             <div key={comment._id} className="flex gap-3">
               <Avatar 
                 src={comment.user?.avatar} 
