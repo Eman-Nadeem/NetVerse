@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Image, Smile } from 'lucide-react';
+import { Image, Smile, Loader2 } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { Button } from '../ui/Button';
 import { toast } from 'sonner';
@@ -69,7 +69,13 @@ const CreatePost = ({ onPostCreated }) => {
           disabled={!content.trim() || isSubmitting}
           className="px-6"
         >
-          {isSubmitting ? 'Posting...' : 'Post'}
+          {isSubmitting ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Posting...
+            </>
+          ) : (
+            'Post'
+          )}
         </Button>
       </div>
     </div>

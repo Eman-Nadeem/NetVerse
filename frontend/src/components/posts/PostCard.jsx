@@ -1,33 +1,43 @@
 import React, { useState } from 'react';
-import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, Copy } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { Button } from '../ui/Button';
 import { clsx } from 'clsx';
 import { formatDistanceToNow } from 'date-fns';
 import api from '../../lib/api';
+import { toast } from 'sonner';
 
-const PostCard = ({ post, onUpdate, currentUserId }) => {
-  // Local state for like and save status, optimistic UI update
-  const [liked, setLiked] = useState(post.likes?.includes(currentUserId)); // Use real user ID
+export const PostCard = ({ post, onUpdate, currentUserId }) => {
+  // Correct like logic: check if current user has liked
+  const [liked, setLiked] = useState(post.likes?.includes(currentUserId));
   const [saved, setSaved] = useState(false);
   const [likesCount, setLikesCount] = useState(post.likes?.length || 0);
+  const [isLiking, setIsLiking] = useState(false);
 
   const handleLike = async () => {
-    // Optimistic UI Update (Update immediately)
+    setIsLiking(true);
     const newLikedState = !liked;
     setLiked(newLikedState);
     setLikesCount(prev => newLikedState ? prev + 1 : prev - 1);
-
     try {
-      // API Call
       await api.post(`/posts/${post._id}/like`);
-      // If successful, we keep the state. If failed, we could revert (not implemented here for simplicity)
+      if (newLikedState) {
+        toast.success('Post liked');
+      } else {
+        toast.error('Post unliked', { icon: '❌' });
+      }
     } catch (error) {
-      console.error("Like failed", error);
-      // Revert on error
       setLiked(!newLikedState);
       setLikesCount(prev => newLikedState ? prev - 1 : prev + 1);
+      toast.error('Failed to update like');
+    } finally {
+      setIsLiking(false);
     }
+  };
+
+  const handleShare = () => {
+    navigator.clipboard.writeText(`${window.location.origin}/post/${post._id}`);
+    toast.success('Link copied to clipboard!');
   };
 
   return (
@@ -45,7 +55,7 @@ const PostCard = ({ post, onUpdate, currentUserId }) => {
             </p>
           </div>
         </div>
-        <Button variant="ghost" className="p-2 h-8 w-8 text-slate-400 hover:text-slate-600 dark:hover:text-zinc-300">
+        <Button variant="ghost" className="p-2 h-8 w-8 text-slate-400 hover:text-slate-600 dark:hover:text-zinc-300" aria-label="More options">
           <MoreHorizontal className="w-4 h-4" />
         </Button>
       </div>
@@ -119,6 +129,8 @@ const PostCard = ({ post, onUpdate, currentUserId }) => {
           <Button 
             variant="ghost" 
             onClick={handleLike}
+            disabled={isLiking}
+            aria-label={liked ? "Unlike post" : "Like post"}
             className={clsx(
               "flex items-center gap-2 text-slate-500 dark:text-zinc-400 hover:text-red-500 dark:hover:text-red-400 px-3 py-2",
               liked && "text-red-500 dark:text-red-500 hover:text-red-600"
@@ -133,7 +145,12 @@ const PostCard = ({ post, onUpdate, currentUserId }) => {
             <span className="text-sm font-medium ml-2">{post.comments?.length || 0}</span>
           </Button>
 
-          <Button variant="ghost" className="text-slate-500 dark:text-zinc-400 hover:text-green-600 dark:hover:text-green-400 px-3 py-2">
+          <Button 
+            variant="ghost" 
+            onClick={handleShare}
+            className="text-slate-500 dark:text-zinc-400 hover:text-green-600 dark:hover:text-green-400 px-3 py-2" 
+            aria-label="Share post"
+          >
             <Share2 className="w-5 h-5" />
           </Button>
         </div>
@@ -141,11 +158,15 @@ const PostCard = ({ post, onUpdate, currentUserId }) => {
         {/* Right Action: Save */}
         <Button 
           variant="ghost" 
-          onClick={() => setSaved(!saved)}
+          onClick={() => {
+            setSaved(!saved);
+            toast(saved ? 'Removed from saved' : 'Post saved');
+          }}
           className={clsx(
             "text-slate-500 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 p-2",
             saved && "text-indigo-600 dark:text-indigo-400"
           )}
+          aria-label="Save post"
         >
           <Bookmark className={clsx("w-5 h-5", saved && "fill-current")} />
         </Button>
