@@ -1,46 +1,44 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { MapPin, Link as LinkIcon, Calendar, Settings, Edit3 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Avatar } from '../components/ui/Avatar';
 import { Button } from '../components/ui/Button';
 import PostCard from '../components/posts/PostCard';
+import api from '../lib/api';
 
 const Profile = () => {
-  // Mock Data
-  const MOCK_USER = {
-    name: 'Eman Nadeem',
-    username: 'webdev.eman',
-    avatar: 'https://i.pravatar.cc/150?img=32',
-    bio: 'Full Stack Developer | Building Netverse 🚀\nReact, Node.js, and MongoDB enthusiast.',
-    website: 'https://netverse.app',
-    location: 'Faisalabad, Pakistan',
-    joinedDate: 'January 2026',
-    stats: { posts: 42, followers: '1.2k', following: '340' }
-  };
+  const [user, setUser] = useState(null);
+  const [posts, setPosts] = useState([]);
+  const [selectedTab, setSelectedTab] = useState('posts');
 
-  // Mock posts
-  const USER_POSTS = [
-    {
-      _id: '1',
-      content: "Just finished implementing the new profile layout! 🎨 The tab system makes navigation so much smoother.",
-      author: MOCK_USER,
-      createdAt: new Date(Date.now() - 1000 * 60 * 5),
-      likes: ['102', '103'],
-      comments: [],
-      images: []
-    },
-    {
-      _id: '2',
-      content: "Working on the backend integration for Netverse. Node.js and Express are handling the requests like a charm. ⚡",
-      author: MOCK_USER,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24),
-      likes: ['105', '106', '107'],
-      comments: [],
-      images: []
-    }
-  ];
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      try {
+        // Fetch User Info
+        const userRes = await api.get('/auth/me');
+        console.log("Fetched user data:", userRes.data.data); // Debug log to check the structure of the response
+        setUser(userRes.data.data);
 
-  const [selectedTab, setSelectedTab] = React.useState('posts');
+        // Fetch User's Posts (Assuming backend supports filtering or we just fetch all and filter client side for now)
+        // Ideally: api.get(`/posts?author=${userRes.data.data._id}`)
+        // For this demo, we'll assume we fetch the general feed or a specific user endpoint
+        // Let's stick to a placeholder or specific fetch if you have the route:
+        const postsRes = await api.get('/posts'); 
+        // Filter for this user's posts
+        const myPosts = postsRes.data.data.filter(p => p.author._id === userRes.data.data._id);
+        setPosts(myPosts);
+
+      } catch (error) {
+        console.error("Failed to load profile", error);
+      }
+    };
+
+    fetchProfileData();
+  }, []);
+
+  if (!user) {
+     return <div className="p-10 text-center">Loading Profile...</div>;
+  }
 
   return (
     <div className="max-w-4xl mx-auto pb-10">
@@ -51,7 +49,7 @@ const Profile = () => {
           <div className="h-40 md:h-64 bg-linear-to-tr from-indigo-600 via-purple-500 to-pink-500 rounded-b-3xl shadow-inner" />
           <div className="px-6 flex justify-between items-end -mt-12 md:-mt-16 relative z-10">
             <Avatar 
-              src={MOCK_USER.avatar} 
+              src={user.avatar} 
               size="xl" 
               className="w-24 h-24 md:w-32 md:h-32 ring-4 ring-slate-50 dark:ring-zinc-950 shadow-2xl"
             />
@@ -75,36 +73,40 @@ const Profile = () => {
               className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-zinc-50 group relative inline-block"
             >
               <span
-                className="relative z-10 bg-clip-text text-transparent bg-gradient-to-r from-slate-900 dark:from-zinc-50 via-slate-900 dark:via-zinc-50 to-slate-900 dark:to-zinc-50 group-hover:from-indigo-600 group-hover:via-purple-500 group-hover:to-pink-500 group-hover:text-transparent transition-all duration-300 ease-in-out"
+                className="relative z-10 bg-clip-text text-transparent bg-linear-to-r from-slate-900 dark:from-zinc-50 via-slate-900 dark:via-zinc-50 to-slate-900 dark:to-zinc-50 group-hover:from-indigo-600 group-hover:via-purple-500 group-hover:to-pink-500 group-hover:text-transparent transition-all duration-300 ease-in-out"
                 style={{ WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
               >
-                {MOCK_USER.name}
+                {user.name}
               </span>
             </h1>
-            <p className="text-indigo-600 dark:text-indigo-400 font-medium">@{MOCK_USER.username}</p>
+            <p className="text-indigo-600 dark:text-indigo-400 font-medium">@{user.username}</p>
           </div>
           <p className="mt-4 text-slate-700 dark:text-zinc-300 whitespace-pre-line max-w-lg leading-relaxed">
-            {MOCK_USER.bio}
+            {user.bio}
           </p>
           <div className="flex flex-wrap gap-4 mt-4 text-sm text-slate-500 dark:text-zinc-400">
-            <div className="flex items-center gap-1.5"><MapPin className="w-4 h-4" /> {MOCK_USER.location}</div>
+            <div className="flex items-center gap-1.5"><MapPin className="w-4 h-4" /> {user.location || 'Not specified'}</div>
             <div className="flex items-center gap-1.5">
               <LinkIcon className="w-4 h-4" /> 
-              <a href={MOCK_USER.website} className="text-indigo-600 hover:underline">{MOCK_USER.website}</a>
+              {user.website ? (
+                <a href={user.website} className="text-indigo-600 hover:underline">{user.website}</a>
+              ) : (
+                'No website provided'
+              )}
             </div>
-            <div className="flex items-center gap-1.5"><Calendar className="w-4 h-4" /> Joined {MOCK_USER.joinedDate}</div>
+            <div className="flex items-center gap-1.5"><Calendar className="w-4 h-4" /> Joined {new Date(user.createdAt).toLocaleDateString()}</div>
           </div>
           <div className="flex gap-8 mt-8 py-4 border-y border-slate-100 dark:border-zinc-800/50 justify-center">
             <div className="flex gap-1.5 items-center">
-              <span className="font-bold text-slate-900 dark:text-zinc-100">{MOCK_USER.stats.posts}</span>
+              <span className="font-bold text-slate-900 dark:text-zinc-100">{posts.length}</span>
               <span className="text-slate-500 text-sm">Posts</span>
             </div>
             <div className="flex gap-1.5 items-center cursor-pointer hover:text-indigo-600 transition-colors">
-              <span className="font-bold text-slate-900 dark:text-zinc-100">{MOCK_USER.stats.followers}</span>
+              <span className="font-bold text-slate-900 dark:text-zinc-100">{user.followersCount}</span>
               <span className="text-slate-500 text-sm">Followers</span>
             </div>
             <div className="flex gap-1.5 items-center cursor-pointer hover:text-indigo-600 transition-colors">
-              <span className="font-bold text-slate-900 dark:text-zinc-100">{MOCK_USER.stats.following}</span>
+              <span className="font-bold text-slate-900 dark:text-zinc-100">{user.followingCount}</span>
               <span className="text-slate-500 text-sm">Following</span>
             </div>
           </div>
@@ -120,7 +122,7 @@ const Profile = () => {
           >
             Posts
             {selectedTab === 'posts' && (
-              <span className="absolute left-1/2 -translate-x-1/2 bottom-0 w-3/4 h-1 rounded-full bg-gradient-to-r from-indigo-600 via-purple-500 to-pink-500" />
+              <span className="absolute left-1/2 -translate-x-1/2 bottom-0 w-3/4 h-1 rounded-full bg-linear-to-r from-indigo-600 via-purple-500 to-pink-500" />
             )}
           </button>
           <button
@@ -129,7 +131,7 @@ const Profile = () => {
           >
             Media
             {selectedTab === 'media' && (
-              <span className="absolute left-1/2 -translate-x-1/2 bottom-0 w-3/4 h-1 rounded-full bg-gradient-to-r from-indigo-600 via-purple-500 to-pink-500" />
+              <span className="absolute left-1/2 -translate-x-1/2 bottom-0 w-3/4 h-1 rounded-full bg-linear-to-r from-indigo-600 via-purple-500 to-pink-500" />
             )}
           </button>
           <button
@@ -138,7 +140,7 @@ const Profile = () => {
           >
             Likes
             {selectedTab === 'likes' && (
-              <span className="absolute left-1/2 -translate-x-1/2 bottom-0 w-3/4 h-1 rounded-full bg-gradient-to-r from-indigo-600 via-purple-500 to-pink-500" />
+              <span className="absolute left-1/2 -translate-x-1/2 bottom-0 w-3/4 h-1 rounded-full bg-linear-to-r from-indigo-600 via-purple-500 to-pink-500" />
             )}
           </button>
         </div>
@@ -146,8 +148,8 @@ const Profile = () => {
         <div className="pt-5">
           {selectedTab === 'posts' && (
             <div className="flex flex-col gap-4">
-              {USER_POSTS.map((post) => (
-                <PostCard key={post._id} post={post} />
+              {posts.map((post) => (
+                <PostCard key={post._id} post={post} currentUserId={user._id} />
               ))}
             </div>
           )}

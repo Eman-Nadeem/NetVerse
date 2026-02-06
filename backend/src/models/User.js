@@ -52,18 +52,16 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
-    followers: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-      },
-    ],
-    following: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-      },
-    ],
+    followers: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: 'User',
+      default: [],
+    },
+    following: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: 'User',
+      default: [],
+    },
     stories: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -113,7 +111,7 @@ const userSchema = new mongoose.Schema(
 userSchema.pre('save', async function () {
   if (!this.isModified('password')) return;
   const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
+  this.password = bcrypt.hash(this.password, salt);
 });
 
 // Method to compare password
@@ -124,12 +122,13 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
 // Virtual= actual followers value not saved in DB, but calculated on the fly
 // Virtual for follower count (followers.length)
 userSchema.virtual('followersCount').get(function () {
-  return this.followers.length;
+  return this.followers ? this.followers.length : 0; // Fallback to 0 if followers is undefined
 });
 
-// Virtual for following count
+// Virtual for following count, if the length of the following array is greater than 0, return that length, otherwise return 0. 
+// This way we avoid errors if the following field is not defined for some reason.
 userSchema.virtual('followingCount').get(function () {
-  return this.following.length;
+  return this.following ? this.following.length : 0; // Fallback to 0 if following is undefined
 });
 
 // Ensure virtuals are included in JSON

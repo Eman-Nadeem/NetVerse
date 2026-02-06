@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Lock, Mail, ArrowRight, Eye, EyeOff, EyeClosed } from 'lucide-react';
+import { Lock, Mail, ArrowRight, Eye, EyeClosed } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button } from '../components/ui/Button';
+import api from '../lib/api';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -13,14 +14,23 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    setTimeout(() => {
-      setIsLoading(false);
-      // Simulate saving a token
-      localStorage.setItem('token', 'mock-jwt-token'); 
-      toast.success('Welcome back to NetVerse!');
+    try {
+      // API CALL to your backend
+      const res = await api.post('/auth/login', formData);
+      // Extract Token and User Data
+      const { token, user } = res.data.data;
+      // Save Token to LocalStorage
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user)); // Optional: Save user info
+      toast.success(`Welcome back, ${user.name}!`);
       navigate('/');
-    }, 1500);
+    } catch (error) {
+      console.error('Login Error:', error);
+      const message = error.response?.data?.message || 'Login failed. Please check your credentials.';
+      toast.error(message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

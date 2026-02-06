@@ -3,20 +3,35 @@ import { Image, Smile } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { Button } from '../ui/Button';
 import { toast } from 'sonner';
+import api from '../../lib/api';
 
-const CreatePost = () => {
-    // Local state for post content
+// Destructure onPostCreated from props
+const CreatePost = ({ onPostCreated }) => {
   const [content, setContent] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handlePost = () => {
+  const handlePost = async () => {
     if (!content.trim()) {
       toast.error('Please enter some content');
       return;
     }
     
-    // api call to create post would go here
-    toast.success('Post created! (Mock)');
-    setContent('');
+    setIsSubmitting(true);
+    try {
+      // API Call to create post
+      await api.post('/posts', { content });
+      
+      toast.success('Post created successfully!');
+      setContent('');
+      
+      // Refresh the feed in the parent component
+      if (onPostCreated) onPostCreated();
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to create post');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -32,7 +47,7 @@ const CreatePost = () => {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="What's on your mind?"
-            className="w-full bg-transparent border-none focus:ring-0 text-slate-900 dark:text-zinc-100 placeholder-slate-400 resize-none min-h-16 text-lg"
+            className="w-full bg-transparent border-none focus:ring-0 text-slate-900 dark:text-zinc-100 placeholder-slate-400 resize-none min-h-[60px] text-lg"
             rows={2}
           />
         </div>
@@ -51,9 +66,10 @@ const CreatePost = () => {
         </div>
         <Button 
           onClick={handlePost} 
+          disabled={!content.trim() || isSubmitting}
           className="px-6"
         >
-          Post
+          {isSubmitting ? 'Posting...' : 'Post'}
         </Button>
       </div>
     </div>

@@ -4,18 +4,30 @@ import { Avatar } from '../ui/Avatar';
 import { Button } from '../ui/Button';
 import { clsx } from 'clsx';
 import { formatDistanceToNow } from 'date-fns';
+import api from '../../lib/api';
 
-const PostCard = ({ post }) => {
+const PostCard = ({ post, onUpdate, currentUserId }) => {
   // Local state for like and save status, optimistic UI update
-  const [liked, setLiked] = useState(false);
+  const [liked, setLiked] = useState(post.likes?.includes(currentUserId)); // Use real user ID
   const [saved, setSaved] = useState(false);
   const [likesCount, setLikesCount] = useState(post.likes?.length || 0);
-  const [currentImage, setCurrentImage] = useState(0);
-  const [imageFade, setImageFade] = useState(false);
 
-  const handleLike = () => {
-    setLiked(!liked);
-    setLikesCount(prev => liked ? prev - 1 : prev + 1);
+  const handleLike = async () => {
+    // Optimistic UI Update (Update immediately)
+    const newLikedState = !liked;
+    setLiked(newLikedState);
+    setLikesCount(prev => newLikedState ? prev + 1 : prev - 1);
+
+    try {
+      // API Call
+      await api.post(`/posts/${post._id}/like`);
+      // If successful, we keep the state. If failed, we could revert (not implemented here for simplicity)
+    } catch (error) {
+      console.error("Like failed", error);
+      // Revert on error
+      setLiked(!newLikedState);
+      setLikesCount(prev => newLikedState ? prev - 1 : prev + 1);
+    }
   };
 
   return (
@@ -48,11 +60,10 @@ const PostCard = ({ post }) => {
         {post.images && post.images.length > 0 && (
           <div className="relative rounded-xl overflow-hidden border border-slate-100 dark:border-zinc-800 bg-black/5 dark:bg-white/5">
             <img
-              src={post.images[currentImage].url}
-              alt={`Post content ${currentImage + 1}`}
-              className={`w-full h-auto object-cover max-h-150 transition-opacity duration-300 ${imageFade ? 'opacity-0' : 'opacity-100'}`}
+              src={post.images[0].url}
+              alt="Post content"
+              className="w-full h-auto object-cover max-h-150 rounded-xl transition-opacity duration-300"
               loading="lazy"
-              onLoad={() => setImageFade(false)}
             />
             {post.images.length > 1 && (
               <>

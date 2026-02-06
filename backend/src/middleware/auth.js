@@ -26,20 +26,21 @@ export const protect = async (req, res, next) => {
       });
     }
     // Attach user info from token payload directly
-    req.user = {
-      userId: decoded.userId,
-      username: decoded.username,
-      role: decoded.role
-    };
+    // req.user = {
+    //   userId: decoded.userId,
+    //   username: decoded.username,
+    //   role: decoded.role
+    // };
+    
     // If you need to fetch fresh user data, uncomment below:
-    // const user = await User.findById(decoded.userId).select('-password');
-    // if (!user) {
-    //   return res.status(401).json({
-    //     success: false,
-    //     message: 'User not found',
-    //   });
-    // }
-    // req.user = user;
+    const user = await User.findById(decoded.userId).select('-password');
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+    req.user = user;
     next();
   } catch (error) {
     console.error('Auth middleware error:', error);

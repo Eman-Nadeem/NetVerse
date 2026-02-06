@@ -69,11 +69,21 @@ export const getFeed = async (req, res, next) => {
     // Get current user with following
     const currentUser = await User.findById(req.user._id).select('following');
 
+    if (!currentUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    // Ensure following is an array
+    const following = currentUser.following || [];
+
     // Get posts from current user and following users
     const posts = await Post.find({
       $or: [
         { author: req.user._id },
-        { author: { $in: currentUser.following } },
+        { author: { $in: following } },
       ],
       privacy: { $in: ['public', 'friends'] },
     })
@@ -86,7 +96,7 @@ export const getFeed = async (req, res, next) => {
     const total = await Post.countDocuments({
       $or: [
         { author: req.user._id },
-        { author: { $in: currentUser.following } },
+        { author: { $in: following } },
       ],
       privacy: { $in: ['public', 'friends'] },
     });
