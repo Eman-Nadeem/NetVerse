@@ -1,7 +1,9 @@
 import React from 'react';
-import { Link } from 'react-router-dom'; // Using Link for future-proofing, works without Router for now if handled carefully
+import { Link, useNavigate } from 'react-router-dom'; // Using Link for future-proofing, works without Router for now if handled carefully
 import { Home, Compass, MessageSquare, User, Settings, LogOut } from 'lucide-react';
 import { clsx } from 'clsx';
+import { useAuthStore } from '../../store/authStore';
+import { toast } from 'sonner';
 
 const navItems = [
   { icon: Home, label: 'Feed', path: '/' },
@@ -11,6 +13,15 @@ const navItems = [
 ];
 
 export const Sidebar = ({ isOpen, onClose }) => {
+  const logout = useAuthStore((state) => state.logout);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    toast.success('Logged out successfully');
+    navigate('/login');
+  };
+
   return (
     <>
       {/* Mobile Overlay */}
@@ -54,7 +65,9 @@ export const Sidebar = ({ isOpen, onClose }) => {
               <Settings className="w-5 h-5" />
               <span>Settings</span>
             </Link>
-            <button className="flex items-center gap-3 px-4 py-3 rounded-xl w-full text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
+            <button
+                onClick={handleLogout}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl w-full text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
                 <LogOut className="w-5 h-5" />
                 <span>Logout</span>
             </button>

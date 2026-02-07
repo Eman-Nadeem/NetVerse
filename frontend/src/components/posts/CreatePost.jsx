@@ -4,6 +4,7 @@ import { Avatar } from '../ui/Avatar';
 import { Button } from '../ui/Button';
 import { toast } from 'sonner';
 import api from '../../lib/api';
+import { useAuthStore } from '../../store/authStore';
 
 // Destructure onPostCreated from props
 const CreatePost = ({ onPostCreated }) => {
@@ -12,6 +13,7 @@ const CreatePost = ({ onPostCreated }) => {
   const [selectedImages, setSelectedImages] = useState([]); // Array of File objects
   const [imagePreviews, setImagePreviews] = useState([]);   // Array of URLs
   const fileInputRef = useRef(null);
+  const currentUser = useAuthStore((state) => state.user); // Get current user from authStore
 
   // Handle file selection
   const handleImageChange = (e) => {
@@ -69,8 +71,8 @@ const CreatePost = ({ onPostCreated }) => {
     <div className="bg-white dark:bg-zinc-900 rounded-2xl p-4 shadow-sm border border-slate-200 dark:border-zinc-800 mb-6">
       <div className="flex gap-4">
         <Avatar 
-          src="https://i.pravatar.cc/150?img=32" 
-          alt="Current User" 
+          src={currentUser?.avatar} 
+          alt={currentUser?.name || 'User'} 
           className="ring-2 ring-indigo-500 ring-offset-2 ring-offset-white dark:ring-offset-zinc-950"
         />
         <div className="flex-1">
@@ -78,7 +80,7 @@ const CreatePost = ({ onPostCreated }) => {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="What's on your mind?"
-            className="w-full bg-transparent border-none focus:ring-0 text-slate-900 dark:text-zinc-100 placeholder-slate-400 resize-none min-h-[60px] text-lg"
+            className="w-full bg-transparent border-none focus:ring-0 text-slate-900 dark:text-zinc-100 placeholder-slate-400 resize-none min-h-15 text-lg"
             rows={2}
           />
         </div>

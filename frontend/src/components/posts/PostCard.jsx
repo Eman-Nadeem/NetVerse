@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, Copy, ChevronDown } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, Copy, ChevronDown, icons } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { Button } from '../ui/Button';
 import { clsx } from 'clsx';
@@ -24,7 +24,7 @@ export const PostCard = ({ post, onUpdate, currentUserId, showComments, onToggle
     try {
       await api.post(`/posts/${post._id}/like`);
       if (newLikedState) toast.success('Post liked');
-      else toast('Like removed');
+      else toast.error('Post unliked', icons.Cross);
     } catch (error) {
       setLiked(!newLikedState);
       setLikesCount(prev => newLikedState ? prev - 1 : prev + 1);
@@ -44,7 +44,7 @@ export const PostCard = ({ post, onUpdate, currentUserId, showComments, onToggle
       {/* Header: User Info & Time */}
       <div className="p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Avatar src={post.author?.avatar} alt={post.author?.name} />
+          <Avatar src={post.author?.avatar} alt={post.author?.name || 'User'} />
           <div>
             <h3 className="font-semibold text-slate-900 dark:text-zinc-100 text-sm leading-tight">
               {post.author?.name}
@@ -66,7 +66,7 @@ export const PostCard = ({ post, onUpdate, currentUserId, showComments, onToggle
         </p>
         {post.images && post.images.length > 0 && (
           <div className="rounded-xl overflow-hidden border border-slate-100 dark:border-zinc-800 bg-black/5 dark:bg-white/5">
-            <img src={post.images[0].url} alt="Post content" className="w-full h-auto object-cover max-h-[600px]" loading="lazy" />
+            <img src={post.images[0].url} alt="Post content" className="w-full h-auto object-cover max-h-150" loading="lazy" />
           </div>
         )}
       </div>

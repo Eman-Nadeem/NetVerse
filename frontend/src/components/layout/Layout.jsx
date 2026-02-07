@@ -1,18 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Navbar } from './Navbar';
 import { Sidebar } from './Sidebar';
 import { BottomBar } from './BottomBar';
 import { useThemeStore } from '../../store/themeStore';
+import { useAuthStore } from '../../store/authStore';
 
 export const Layout = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { initializeTheme } = useThemeStore();
+  const checkAuth = useAuthStore((state) => state.checkAuth);
 
   // Initialize theme on mount , e.g., set dark or light mode based on user preference
-  React.useEffect(() => {
+  useEffect(() => {
     initializeTheme();
-  }, [initializeTheme]);
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 transition-colors duration-300">

@@ -4,10 +4,13 @@ import { Link } from 'react-router-dom';
 import { Avatar } from '../ui/Avatar.jsx';
 import { useThemeStore } from '../../store/themeStore';
 import { Button } from '../ui/Button.jsx';
+import { useAuthStore } from '../../store/authStore';
 
 export const Navbar = ({ toggleSidebar }) => {
   const theme = useThemeStore((state) => state.theme);
   const toggleTheme = useThemeStore((state) => state.toggleTheme);
+  const currentUser = useAuthStore((state) => state.user); // Get current user from authStore
+
   return (
     // header stays at the top even when scrolling
     // backdrop-blur-md gives a frosted glass effect (glassmorphism)
@@ -60,8 +63,8 @@ export const Navbar = ({ toggleSidebar }) => {
             </Button>
         </Link>
         <Avatar
-          src="https://i.pravatar.cc/150?img=32"
-          alt="User"
+          src={currentUser?.avatar}
+          alt={currentUser?.name || 'User'}
           className="hidden md:block cursor-pointer ring-2 ring-indigo-500 ring-offset-2 ring-offset-white dark:ring-offset-zinc-950"
         />
       </div>

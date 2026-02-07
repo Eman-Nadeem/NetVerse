@@ -1,23 +1,37 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/layout/Layout';
+import { ProtectedRoute } from './components/ProtectedRoute';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import Home from './pages/Home';
 import Profile from './pages/Profile';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword'; 
+import { useAuthStore } from './store/authStore';
 
 const App = () => {
+  useEffect(() => {
+    useAuthStore.getState().checkAuth(); // Check auth on app load
+  }, []);
+
   return (
     <Routes>
-      {/* Public Route: Login (Standalone, no Layout) */}
+      {/* Public Auth Routes */}
       <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password/:resetToken" element={<ResetPassword />} />
 
-      {/* Protected Routes: Wrapped in Layout */}
-      <Route path="/" element={<Layout />}>
+      {/* Protected Routes */}
+      <Route path="/" element={
+        <ProtectedRoute>
+          <Layout />
+        </ProtectedRoute>
+      }>
         <Route index element={<Home />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="settings" element={<Profile />} /> {/* Reuse Profile for settings demo */}
-        
-        {/* Catch all for internal routes -> redirect to Home */}
+        <Route path="profile" element={<Profile />} />
+        <Route path="settings" element={<Profile />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
 

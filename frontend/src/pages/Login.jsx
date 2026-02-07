@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { Lock, Mail, ArrowRight, Eye, EyeClosed } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button } from '../components/ui/Button';
 import api from '../lib/api';
+import { useAuthStore } from '../store/authStore';
 
 const Login = () => {
   const navigate = useNavigate();
+  const login = useAuthStore((state) => state.login);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
@@ -19,9 +21,8 @@ const Login = () => {
       const res = await api.post('/auth/login', formData);
       // Extract Token and User Data
       const { token, user } = res.data.data;
-      // Save Token to LocalStorage
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user)); // Optional: Save user info
+      login(token, user); // Update Zustand Store with token and user info
+
       toast.success(`Welcome back, ${user.name}!`);
       navigate('/');
     } catch (error) {
@@ -88,7 +89,7 @@ const Login = () => {
               <input type="checkbox" className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
               Remember me
             </label>
-            <a href="#" className="text-indigo-600 dark:text-indigo-400 hover:underline">Forgot password?</a>
+            <Link to="/forgot-password" className="text-indigo-600 dark:text-indigo-400 hover:underline">Forgot password?</Link>
           </div>
 
           <Button 
@@ -105,7 +106,7 @@ const Login = () => {
         </form>
 
         <p className="text-center mt-6 text-sm text-slate-500 dark:text-zinc-400">
-          Don't have an account? <a href="#" className="text-indigo-600 dark:text-indigo-400 hover:underline font-medium">Sign up</a>
+          Don't have an account? <Link to="/register" className="text-indigo-600 dark:text-indigo-400 hover:underline font-medium">Sign up</Link>
         </p>
       </div>
     </div>
