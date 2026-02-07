@@ -1,12 +1,13 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom'; // Using Link for future-proofing, works without Router for now if handled carefully
-import { Home, Compass, MessageSquare, User, Settings, LogOut } from 'lucide-react';
+import { Home, Compass, MessageSquare, User, Settings, LogOut, Search } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useAuthStore } from '../../store/authStore';
 import { toast } from 'sonner';
 
 const navItems = [
   { icon: Home, label: 'Feed', path: '/' },
+  { icon: Search, label: 'Search', path: '/search' },
   { icon: Compass, label: 'Explore', path: '/explore' },
   { icon: MessageSquare, label: 'Messages', path: '/chats' },
   { icon: User, label: 'Profile', path: '/profile' },

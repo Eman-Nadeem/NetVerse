@@ -5,11 +5,13 @@ import { Send } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import api from '../../lib/api';
 import { toast } from 'sonner';
+import { useAuthStore } from '../../store/authStore';
 
 export const CommentSection = ({ postId, comments: initialComments, onUpdate }) => {
   const [comments, setComments] = useState(initialComments || []);
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user: currentUser } = useAuthStore();
 
   const handleAddComment = async (e) => {
     e.preventDefault();
@@ -72,8 +74,8 @@ export const CommentSection = ({ postId, comments: initialComments, onUpdate }) 
       {/* Add Comment Form */}
       <form onSubmit={handleAddComment} className="flex gap-2 items-center mt-2">
         <Avatar 
-          src="https://i.pravatar.cc/150?img=32" 
-          alt="Me" 
+          src={currentUser?.avatar} 
+          alt={currentUser?.name || 'User'} 
           size="sm"
         />
         <div className="flex-1 relative">

@@ -8,6 +8,8 @@ import Home from './pages/Home';
 import Profile from './pages/Profile';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword'; 
+import Search from './pages/Search';
+import Notifications from './pages/Notifications';
 import { useAuthStore } from './store/authStore';
 
 const App = () => {
@@ -30,7 +32,13 @@ const App = () => {
         </ProtectedRoute>
       }>
         <Route index element={<Home />} />
+
         <Route path="profile" element={<Profile />} />
+        <Route path="profile/:id" element={<Profile />} />
+
+        <Route path="search" element={<Search />} />
+        <Route path="notifications" element={<Notifications />} />
+        
         <Route path="settings" element={<Profile />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
