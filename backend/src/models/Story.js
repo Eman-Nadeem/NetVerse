@@ -54,11 +54,10 @@ const storySchema = new mongoose.Schema(
 );
 
 // Check if story is expired before saving
-storySchema.pre('save', function (next) {
+storySchema.pre('save', async function () {
   if (this.expiresAt < new Date()) {
     this.isExpired = true;
   }
-  next();
 });
 
 // Virtual for viewers count

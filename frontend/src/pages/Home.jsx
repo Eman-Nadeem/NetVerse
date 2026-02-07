@@ -4,12 +4,22 @@ import PostCard from '../components/posts/PostCard';
 import { PostSkeleton } from '../components/ui/Skeleton'; // Import Skeleton
 import { FileX } from 'lucide-react'; // Icon for empty state
 import api from '../lib/api';
+import StoryTray from '../components/stories/StoryTray';
+import StoryViewer from '../components/stories/StoryViewer';
+import CreateStoryModal from '../components/stories/CreateStoryModal';
 
 const Home = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState(null);
   const [openCommentsPostId, setOpenCommentsPostId] = useState(null);
+
+  // Story States
+  const [allStories, setAllStories] = useState([]);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerUserIndex, setViewerUserIndex] = useState(0);
+  const [viewerStoryIndex, setViewerStoryIndex] = useState(0);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   // Fetch current user info
   useEffect(() => {
@@ -37,12 +47,59 @@ const Home = () => {
     }
   };
 
+  // Fetch Stories (For the viewer logic)
+  const fetchStories = async () => {
+    try {
+      const res = await api.get('/stories');
+      setAllStories(res.data.data);
+    } catch (error) {
+      console.error('Failed to fetch stories', error);
+    }
+  };
+
   useEffect(() => {
     fetchPosts();
+    fetchStories();
   }, []);
+
+  // Handle click on Story Tray
+  const handleStoryClick = async (userIndex, storyIndex, isCreate) => {
+    if (isCreate) {
+      setIsCreateModalOpen(true);
+    } else {
+      // Refresh stories to ensure we have latest
+      await fetchStories();
+      setViewerUserIndex(userIndex);
+      setViewerStoryIndex(storyIndex);
+      setViewerOpen(true);
+    }
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Story Tray */}
+      <StoryTray onStoryClick={handleStoryClick} />
+
+      {/* Story Viewer Overlay */}
+      {viewerOpen && (
+        <StoryViewer 
+          storiesData={allStories}
+          initialUserIndex={viewerUserIndex}
+          initialStoryIndex={viewerStoryIndex}
+          onClose={() => setViewerOpen(false)}
+        />
+      )}
+
+      {/* Create Story Modal */}
+      <CreateStoryModal 
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onStoryCreated={() => {
+          setIsCreateModalOpen(false);
+          fetchStories(); // Refresh tray to show my new story
+        }}
+      />
+
       <CreatePost onPostCreated={fetchPosts} />
 
       {loading ? (

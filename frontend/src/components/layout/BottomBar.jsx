@@ -6,7 +6,7 @@ import { clsx } from 'clsx';
 const navItems = [
   { icon: Home, label: 'Feed', path: '/' },
   { icon: Compass, label: 'Explore', path: '/explore' },
-  { icon: Plus, label: 'Create', path: '/create' },
+  { icon: Plus, label: 'Create', path: '/' },
   { icon: Search, label: 'Search', path: '/search' },
   { icon: User, label: 'Profile', path: '/profile' },
 ];
