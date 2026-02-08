@@ -105,11 +105,20 @@ const Profile = () => {
             <div className="flex gap-2 pb-2">
               {!isMyProfile && (
                 <>
-                  <Link to={`/chats/create/${user._id}`}>
-                    <Button variant="secondary" className="rounded-full px-4">
-                      <MessageSquare className="w-4 h-4" />
-                    </Button>
-                  </Link>
+                  <Button 
+                    variant="secondary" 
+                    className="rounded-full px-4"
+                    onClick={async () => {
+                      try {
+                        const res = await api.post('/chats', { userId: user._id });
+                        navigate(`/chats/${res.data.data._id}`);
+                      } catch (error) {
+                        toast.error('Could not open chat');
+                      }
+                    }}
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                  </Button>
                   <Button 
                     variant={isFollowing ? "secondary" : "primary"} 
                     className="rounded-full px-6"

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Search as SearchIcon, User, MapPin, Link as LinkIcon, UserPlus, UserMinus } from 'lucide-react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Search as SearchIcon, User, MapPin, Link as LinkIcon, UserPlus, UserMinus, MessageSquare } from 'lucide-react';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { Avatar } from '../components/ui/Avatar';
 import { Button } from '../components/ui/Button';
 import api from '../lib/api';
@@ -10,11 +10,12 @@ import { useAuthStore } from '../store/authStore';
 const Search = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialQuery = searchParams.get('q') || '';
+  const navigate = useNavigate();
 
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
-  const { user: currentUser } = useAuthStore(); // To check if we are already following
+  const { user: currentUser, updateUser } = useAuthStore(); // To check if we are already following
 
   useEffect(() => {
     setQuery(initialQuery);
@@ -69,6 +70,15 @@ const Search = () => {
 
     try {
       await api.post(`/users/follow/${userId}`);
+      
+      // Update the auth store with new following status
+      const currentFollowing = currentUser.following || [];
+      const updatedFollowing = isCurrentlyFollowing 
+        ? currentFollowing.filter(id => id !== userId)
+        : [...currentFollowing, userId];
+      
+      updateUser({ following: updatedFollowing });
+      
       toast.success(isCurrentlyFollowing ? 'Unfollowed' : 'Following');
     } catch (error) {
       toast.error('Action failed');
@@ -115,7 +125,9 @@ const Search = () => {
         )}
 
         {results.map((user) => {
-          const isFollowing = user.followers?.includes(currentUser?._id);
+          // Check if current user is following this user from authStore
+          const currentFollowing = currentUser?.following || [];
+          const isFollowing = currentFollowing.some(id => id === user._id || id.toString() === user._id);
           return (
             <Link 
               key={user._id} 
@@ -136,17 +148,37 @@ const Search = () => {
                   </div>
                 </div>
                 
-                <Button 
-                  variant={isFollowing ? "secondary" : "primary"}
-                  className="rounded-full px-4"
-                  onClick={(e) => handleFollow(e, user._id, isFollowing)}
-                >
-                  {isFollowing ? (
-                    <>Following <UserMinus className="w-4 h-4 ml-2" /></>
-                  ) : (
-                    <>Follow <UserPlus className="w-4 h-4 ml-2" /></>
-                  )}
-                </Button>
+                {currentUser?._id !== user._id && (
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={async (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        try {
+                          const res = await api.post('/chats', { userId: user._id });
+                          navigate(`/chats/${res.data.data._id}`);
+                        } catch (error) {
+                          toast.error('Could not open chat');
+                        }
+                      }}
+                      className="rounded-full p-2 border border-slate-200 dark:border-zinc-700 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors"
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                    </button>
+
+                    <Button 
+                      variant={isFollowing ? "secondary" : "primary"}
+                      className="rounded-full px-4"
+                      onClick={(e) => handleFollow(e, user._id, isFollowing)}
+                    >
+                      {isFollowing ? (
+                        <>Following <UserMinus className="w-4 h-4 ml-2" /></>
+                      ) : (
+                        <>Follow <UserPlus className="w-4 h-4 ml-2" /></>
+                      )}
+                    </Button>
+                  </div>
+                )}
               </div>
             </Link>
           );

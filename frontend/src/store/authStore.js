@@ -31,25 +31,24 @@ export const useAuthStore = create((set, get) => ({
       return;
     }
 
-    if(get().user){
-      set({ isLoading: false });
-      return;
-    }
-
     set({ isLoading: true });
     try {
       const res = await api.get('/auth/me');
       set({ user: res.data.data, isAuthenticated: true, isLoading: false });
+      localStorage.setItem('user', JSON.stringify(res.data.data));
     } catch (error) {
       localStorage.removeItem('token');
+      localStorage.removeItem('user');
       set({ token: null, user: null, isAuthenticated: false, isLoading: false });
     }
   },
 
   // Update User Action (for profile edits later)
   updateUser: (userData) => {
-    set((state) => ({
-      user: { ...state.user, ...userData },
-    }));
+    set((state) => {
+      const updatedUser = { ...state.user, ...userData };
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      return { user: updatedUser };
+    });
   },
 }));

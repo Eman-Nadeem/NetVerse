@@ -78,7 +78,7 @@ const Home = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Story Tray */}
-      <StoryTray onStoryClick={handleStoryClick} />
+      <StoryTray stories={allStories} onStoryClick={handleStoryClick} />
 
       {/* Story Viewer Overlay */}
       {viewerOpen && (

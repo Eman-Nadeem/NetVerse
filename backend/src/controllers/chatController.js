@@ -147,34 +147,36 @@ export const sendMessage = async (req, res, next) => {
     chat.updatedAt = new Date();
     await chat.save();
 
-    // Update unread count for other participants
-    chat.participants.forEach(async (participantId) => {
+    // Update unread count and send notifications for other participants
+    for (const participantId of chat.participants) {
       if (participantId.toString() !== req.user._id.toString()) {
         const currentCount = chat.unreadCount.get(participantId.toString()) || 0;
         chat.unreadCount.set(participantId.toString(), currentCount + 1);
 
         // Create notification
-        await Notification.create({
+        const notification = await Notification.create({
           recipient: participantId,
           sender: req.user._id,
           type: 'message',
           chat: chat._id,
           content: content.substring(0, 100),
-          link: `/chat/${chat._id}`,
+          link: `/chats/${chat._id}`,
         });
-      }
-    });
-    await chat.save();
 
-    // Emit real-time message via Socket.IO
-    chat.participants.forEach((participantId) => {
-      if (participantId.toString() !== req.user._id.toString()) {
-        global.io.to(participantId.toString()).emit('newMessage', {
-          chatId: chat._id,
+        // Populate sender for real-time notification
+        await notification.populate('sender', '_id name username avatar');
+        
+        // Emit real-time notification and message
+        const targetRoom = participantId.toString();
+        
+        global.io.to(targetRoom).emit('newNotification', notification);
+        global.io.to(targetRoom).emit('newMessage', {
+          chatId: chat._id.toString(),
           message,
         });
       }
-    });
+    }
+    await chat.save();
 
     res.status(201).json({
       success: true,

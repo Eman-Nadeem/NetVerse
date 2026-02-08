@@ -99,7 +99,7 @@ const FollowList = () => {
           filteredUsers.map((user) => (
             <div 
               key={user._id}
-              className="group flex items-center justify-between p-4 bg-white dark:bg-zinc-900 rounded-[2rem] border border-slate-100 dark:border-zinc-800 hover:border-indigo-500/30 transition-all shadow-sm"
+              className="group flex items-center justify-between p-4 bg-white dark:bg-zinc-900 rounded-4xl border border-slate-100 dark:border-zinc-800 hover:border-indigo-500/30 transition-all shadow-sm"
             >
               <Link to={`/profile/${user._id}`} className="flex items-center gap-3 min-w-0">
                 <Avatar src={user.avatar} alt={user.name} className="w-12 h-12 rounded-2xl" />

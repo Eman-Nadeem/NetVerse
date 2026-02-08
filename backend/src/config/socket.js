@@ -26,7 +26,6 @@ export const createSocket = (httpServer) => {
     socket.on('join', (userId) => {
       const roomId = userId.toString();
       socket.join(roomId);
-      console.log(`👤 User ${userId} joined room: ${roomId}`);
     });
 
     // Handle real-time messaging

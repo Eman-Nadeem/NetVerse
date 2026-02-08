@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Bell, MessageCircleHeartIcon, Moon, Sun } from 'lucide-react'; // Icons library
+import { Search, Bell, MessageCircleHeartIcon, Moon, Sun, LogOut } from 'lucide-react'; // Icons library
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Avatar } from '../ui/Avatar.jsx';
 import { useThemeStore } from '../../store/themeStore';
@@ -9,10 +9,16 @@ import { useAuthStore } from '../../store/authStore';
 export const Navbar = ({}) => {
   const theme = useThemeStore((state) => state.theme);
   const toggleTheme = useThemeStore((state) => state.toggleTheme);
-  const currentUser = useAuthStore((state) => state.user); // Get current user from authStore
+  const { user: currentUser, logout } = useAuthStore(); // Get current user and logout from authStore
   const navigate = useNavigate();
   const location = useLocation();
   const isSearchPage = location.pathname === '/search';
+  const isProfilePage = location.pathname.startsWith('/profile');
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
     // header stays at the top even when scrolling
@@ -62,14 +68,24 @@ export const Navbar = ({}) => {
             </Button>
         </Link>
 
-        <Link
-          to="/chats"
-          className="md:hidden rounded-full"
-        >
+        {isProfilePage ? (
+          <Button 
+            className="md:hidden px-2" 
+            variant="ghost"
+            onClick={handleLogout}
+          >
+            <LogOut className="w-5 h-5 text-red-500" />
+          </Button>
+        ) : (
+          <Link
+            to="/chats"
+            className="md:hidden rounded-full"
+          >
             <Button className="px-2" variant="ghost">
               <MessageCircleHeartIcon className="w-5 h-5 text-slate-600 dark:text-zinc-400" />
             </Button>
-        </Link>
+          </Link>
+        )}
         <Avatar
           src={currentUser?.avatar}
           alt={currentUser?.name || 'User'}

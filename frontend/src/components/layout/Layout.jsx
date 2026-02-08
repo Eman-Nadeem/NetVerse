@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { Navbar } from './Navbar';
 import { Sidebar } from './Sidebar';
 import { BottomBar } from './BottomBar';
@@ -10,11 +10,24 @@ export const Layout = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { initializeTheme } = useThemeStore();
   const checkAuth = useAuthStore((state) => state.checkAuth);
+  const location = useLocation();
+
+  // Check if we're on a chat room page
+  const isChatRoom = location.pathname.match(/^\/chats\/[^/]+$/);
 
   // Initialize theme on mount , e.g., set dark or light mode based on user preference
   useEffect(() => {
     initializeTheme();
   }, []);
+
+  // Full screen layout for chat room
+  if (isChatRoom) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-zinc-950">
+        <Outlet />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 transition-colors duration-300">

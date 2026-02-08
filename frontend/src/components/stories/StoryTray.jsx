@@ -1,24 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Plus } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { useAuthStore } from '../../store/authStore';
-import api from '../../lib/api';
 
-const StoryTray = ({ onStoryClick }) => {
-  const [stories, setStories] = useState([]);
+const StoryTray = ({ stories = [], onStoryClick }) => {
   const { user: currentUser } = useAuthStore();
-
-  useEffect(() => {
-    const fetchStories = async () => {
-      try {
-        const res = await api.get('/stories');
-        setStories(res.data.data);
-      } catch (error) {
-        console.error('Failed to fetch stories', error);
-      }
-    };
-    fetchStories();
-  }, []);
 
   // Check if current user has stories and find their index
   const myStoryIndex = stories.findIndex(s => s._id === currentUser?._id);
@@ -60,7 +46,7 @@ const StoryTray = ({ onStoryClick }) => {
                   <div className="w-full h-full bg-white dark:bg-zinc-900 rounded-full p-0.5">
                     <Avatar 
                       src={currentUser?.avatar} 
-                      alt="My Story" 
+                      alt={currentUser?.name || currentUser?.username} 
                       size="lg" 
                       className="w-full h-full rounded-full" 
                     />
@@ -80,7 +66,7 @@ const StoryTray = ({ onStoryClick }) => {
                 <div className="absolute inset-0 rounded-full border-2 border-dashed border-slate-300 dark:border-zinc-600" />
                 <Avatar 
                   src={currentUser?.avatar} 
-                  alt="My Story" 
+                  alt={currentUser?.name || currentUser?.username} 
                   size="lg" 
                   className="w-full h-full rounded-full opacity-80" 
                 />
@@ -109,7 +95,7 @@ const StoryTray = ({ onStoryClick }) => {
                 {/* Gradient Ring for Stories */}
                 <div className={`absolute inset-0 rounded-full p-0.5 ${
                   userData.stories.length > 0 
-                  ? 'bg-linear-to-tr from-yellow-400 via-pink-500 to-purple-600' 
+                  ? 'bg-linear-to-tr from-indigo-500 via-purple-500 to-pink-500' 
                   : 'bg-slate-300 dark:bg-zinc-700'
                 }`}>
                   <div className="w-full h-full bg-white dark:bg-zinc-900 rounded-full p-0.5">

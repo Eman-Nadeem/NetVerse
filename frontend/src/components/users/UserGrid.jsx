@@ -61,7 +61,7 @@ export const UserGrid = () => {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {[...Array(8)].map((_, i) => (
-          <div key={i} className="bg-slate-100 dark:bg-zinc-900/50 rounded-[2rem] h-64 animate-pulse border border-slate-200 dark:border-zinc-800" />
+          <div key={i} className="bg-slate-100 dark:bg-zinc-900/50 rounded-4xl h-64 animate-pulse border border-slate-200 dark:border-zinc-800" />
         ))}
       </div>
     );
@@ -73,7 +73,7 @@ export const UserGrid = () => {
         <Link 
           key={user._id} 
           to={`/profile/${user._id}`}
-          className="group relative bg-white dark:bg-zinc-900 rounded-[2rem] p-6 transition-all duration-500 border border-slate-200 dark:border-zinc-800 hover:border-indigo-500/50 hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-2 overflow-hidden"
+          className="group relative bg-white dark:bg-zinc-900 rounded-4xl p-6 transition-all duration-500 border border-slate-200 dark:border-zinc-800 hover:border-indigo-500/50 hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-2 overflow-hidden"
         >
           {/* Subtle Background Accent */}
           <div className="absolute top-0 right-0 w-24 h-24 bg-linear-to-bl from-indigo-500/5 to-transparent rounded-full -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-700" />
@@ -127,13 +127,13 @@ export const UserGrid = () => {
             >
               {user.isFollowing ? (
                 <>
-                  <UserCheck className="w-5 h-5 flex-shrink-0 transition-transform group-hover/btn:scale-110" />
+                  <UserCheck className="w-5 h-5 shrink-0 transition-transform group-hover/btn:scale-110" />
                   <span className="group-hover/btn:hidden">Following</span>
                   <span className="hidden group-hover/btn:inline">Unfollow</span>
                 </>
               ) : (
                 <>
-                  <UserPlus className="w-5 h-5 flex-shrink-0 transition-transform group-hover/btn:scale-110" />
+                  <UserPlus className="w-5 h-5 shrink-0 transition-transform group-hover/btn:scale-110" />
                   Follow
                 </>
               )}

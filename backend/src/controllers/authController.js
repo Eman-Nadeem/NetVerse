@@ -110,6 +110,8 @@ export const login = async (req, res, next) => {
           avatar: user.avatar,
           bio: user.bio,
           isOnline: user.isOnline,
+          following: user.following,
+          followers: user.followers,
         },
         token,
       },

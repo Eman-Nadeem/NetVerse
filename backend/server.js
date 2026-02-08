@@ -1,5 +1,6 @@
 import { createServer } from 'http';
 import dotenv from 'dotenv';
+import mongoose from 'mongoose';
 import connectDB from './src/config/db.js';
 import app from './src/app.js';
 import { createSocket } from './src/config/socket.js';

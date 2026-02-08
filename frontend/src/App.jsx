@@ -12,12 +12,25 @@ import Search from './pages/Search';
 import Notifications from './pages/Notifications';
 import Explore from './pages/Explore';
 import FollowList from './pages/FollowList';
+import Chats from './pages/Chats';
 import { useAuthStore } from './store/authStore';
+import { getSocket, emitWhenReady } from './lib/socket';
+import ChatRoom from './pages/ChatRoom';
 
 const App = () => {
+  const { user, isAuthenticated } = useAuthStore();
+
   useEffect(() => {
     useAuthStore.getState().checkAuth(); // Check auth on app load
   }, []);
+
+  // Join socket room when user is authenticated
+  useEffect(() => {
+    if (isAuthenticated && user?._id) {
+      localStorage.setItem('user', JSON.stringify(user));
+      emitWhenReady('join', user._id);
+    }
+  }, [isAuthenticated, user]);
 
   return (
     <Routes>
@@ -38,6 +51,9 @@ const App = () => {
         <Route path="profile" element={<Profile />} />
         <Route path="profile/:id" element={<Profile />} />
         <Route path="profile/:id/:type" element={<FollowList />} />
+
+        <Route path="chats" element={<Chats />} />
+        <Route path="chats/:chatId" element={<ChatRoom />} />
 
         <Route path="search" element={<Search />} />
         <Route path="explore" element={<Explore />} />

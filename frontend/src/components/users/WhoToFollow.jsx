@@ -178,7 +178,7 @@ export const WhoToFollow = ({ title = "Who to follow", limit = 3, onDismiss }) =
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-zinc-900 rounded-[2rem] border border-slate-200 dark:border-zinc-800 overflow-hidden mb-6">
+      <div className="bg-white dark:bg-zinc-900 rounded-4xl border border-slate-200 dark:border-zinc-800 overflow-hidden mb-6">
         <div className="p-5 border-b border-slate-100 dark:border-zinc-800">
           <div className="h-5 bg-slate-100 dark:bg-zinc-800 rounded-full w-32 animate-pulse" />
         </div>
@@ -200,7 +200,7 @@ export const WhoToFollow = ({ title = "Who to follow", limit = 3, onDismiss }) =
   if (users.length === 0) return null;
 
   return (
-    <div className="bg-white dark:bg-zinc-900 rounded-[2rem] shadow-sm border border-slate-200 dark:border-zinc-800 overflow-hidden mb-6 transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/5">
+    <div className="bg-white dark:bg-zinc-900 rounded-4xl shadow-sm border border-slate-200 dark:border-zinc-800 overflow-hidden mb-6 transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/5">
       {/* Header */}
       <div className="p-5 border-b border-slate-100 dark:border-zinc-800 flex justify-between items-center bg-linear-to-r from-transparent to-slate-50/50 dark:to-zinc-800/30">
         <h3 className="font-black text-slate-900 dark:text-zinc-100 flex items-center gap-2 tracking-tight">
@@ -241,7 +241,7 @@ export const WhoToFollow = ({ title = "Who to follow", limit = 3, onDismiss }) =
               
               <button 
                 onClick={(e) => handleFollow(e, user._id, user.isFollowing)}
-                className={`flex-shrink-0 p-2.5 rounded-2xl transition-all duration-300 ${
+                className={`shrink-0 p-2.5 rounded-2xl transition-all duration-300 ${
                   user.isFollowing 
                     ? 'bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-zinc-400 hover:bg-red-500 hover:text-white' 
                     : 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400 hover:bg-indigo-600 hover:text-white shadow-sm'

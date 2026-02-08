@@ -6,14 +6,26 @@ import { formatDistanceToNow } from 'date-fns';
 import api from '../lib/api';
 import { toast } from 'sonner';
 import { clsx } from 'clsx';
+import { getSocket } from '../lib/socket';
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const socket = getSocket();
 
   useEffect(() => {
     fetchNotifications();
   }, []);
+
+  // Listen for real-time notifications
+  useEffect(() => {
+    const handleNewNotification = (notification) => {
+      setNotifications(prev => [notification, ...prev]);
+    };
+
+    socket.on('newNotification', handleNewNotification);
+    return () => socket.off('newNotification', handleNewNotification);
+  }, [socket]);
 
   const fetchNotifications = async () => {
     try {
