@@ -22,7 +22,7 @@ export const BottomBar = () => {
           
           return (
             <Link
-              key={item.path}
+              key={item.label}
               to={item.path}
               className={clsx(
                 "flex flex-col items-center justify-center w-full h-full transition-colors text-slate-400 dark:text-zinc-500 hover:text-indigo-600 dark:hover:text-indigo-400"

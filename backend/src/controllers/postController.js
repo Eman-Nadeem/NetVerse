@@ -452,3 +452,88 @@ export const sharePost = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc    Get trending/explore posts (public posts sorted by engagement)
+// @route   GET /api/posts/explore
+// @access  Private
+export const getExplorePosts = async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const timeframe = req.query.timeframe || '7d'; // 24h, 7d, 30d
+
+    // Calculate date filter based on timeframe
+    let dateFilter = new Date();
+    switch (timeframe) {
+      case '24h':
+        dateFilter.setHours(dateFilter.getHours() - 24);
+        break;
+      case '7d':
+        dateFilter.setDate(dateFilter.getDate() - 7);
+        break;
+      case '30d':
+        dateFilter.setDate(dateFilter.getDate() - 30);
+        break;
+      default:
+        dateFilter.setDate(dateFilter.getDate() - 7);
+    }
+
+    // Get public posts sorted by engagement (likes + comments count)
+    const posts = await Post.aggregate([
+      {
+        $match: {
+          privacy: 'public',
+          createdAt: { $gte: dateFilter },
+        },
+      },
+      {
+        $addFields: {
+          engagement: {
+            $add: [
+              { $size: { $ifNull: ['$likes', []] } },
+              { $multiply: [{ $size: { $ifNull: ['$comments', []] } }, 2] }, // Comments weighted 2x
+              { $size: { $ifNull: ['$shares', []] } },
+            ],
+          },
+        },
+      },
+      { $sort: { engagement: -1, createdAt: -1 } },
+      { $skip: (page - 1) * limit },
+      { $limit: limit },
+    ]);
+
+    // Populate author info
+    await Post.populate(posts, {
+      path: 'author',
+      select: '_id name username avatar',
+    });
+
+    // Populate comments with user info
+    await Post.populate(posts, {
+      path: 'comments',
+      populate: {
+        path: 'user',
+        select: '_id name username avatar',
+      },
+    });
+
+    // Get total count
+    const total = await Post.countDocuments({
+      privacy: 'public',
+      createdAt: { $gte: dateFilter },
+    });
+
+    res.status(200).json({
+      success: true,
+      data: posts,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};

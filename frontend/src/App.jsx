@@ -10,6 +10,8 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword'; 
 import Search from './pages/Search';
 import Notifications from './pages/Notifications';
+import Explore from './pages/Explore';
+import FollowList from './pages/FollowList';
 import { useAuthStore } from './store/authStore';
 
 const App = () => {
@@ -35,8 +37,10 @@ const App = () => {
 
         <Route path="profile" element={<Profile />} />
         <Route path="profile/:id" element={<Profile />} />
+        <Route path="profile/:id/:type" element={<FollowList />} />
 
         <Route path="search" element={<Search />} />
+        <Route path="explore" element={<Explore />} />
         <Route path="notifications" element={<Notifications />} />
         
         <Route path="settings" element={<Profile />} />

@@ -56,11 +56,12 @@ const Search = () => {
     // Optimistic UI Update
     setResults(prev => prev.map(u => {
       if (u._id === userId) {
+        const currentFollowers = u.followers || [];
         return {
           ...u,
           followers: isCurrentlyFollowing 
-            ? u.followers.filter(id => id !== currentUser._id) 
-            : [...u.followers, currentUser._id]
+            ? currentFollowers.filter(id => id !== currentUser._id) 
+            : [...currentFollowers, currentUser._id]
         };
       }
       return u;

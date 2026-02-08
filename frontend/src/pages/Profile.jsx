@@ -168,14 +168,24 @@ const Profile = () => {
               <span className="font-bold text-slate-900 dark:text-zinc-100">{posts.length}</span>
               <span className="text-slate-500 text-sm">Posts</span>
             </div>
-            <div className="flex gap-1.5 items-center">
+
+            {/* Followers Link */}
+            <Link 
+              to={`/profile/${user._id}/followers`} 
+              className="flex gap-1.5 items-center hover:bg-slate-50 dark:hover:bg-zinc-800/50 px-3 py-1 rounded-xl transition-colors"
+            >
               <span className="font-bold text-slate-900 dark:text-zinc-100">{user.followersCount}</span>
               <span className="text-slate-500 text-sm">Followers</span>
-            </div>
-            <div className="flex gap-1.5 items-center">
+            </Link>
+
+            {/* Following Link */}
+            <Link 
+              to={`/profile/${user._id}/following`} 
+              className="flex gap-1.5 items-center hover:bg-slate-50 dark:hover:bg-zinc-800/50 px-3 py-1 rounded-xl transition-colors"
+            >
               <span className="font-bold text-slate-900 dark:text-zinc-100">{user.followingCount}</span>
               <span className="text-slate-500 text-sm">Following</span>
-            </div>
+            </Link>
           </div>
         </div>
       </div>

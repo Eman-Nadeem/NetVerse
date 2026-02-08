@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, Copy, ChevronDown, icons } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { Button } from '../ui/Button';
@@ -44,11 +45,15 @@ export const PostCard = ({ post, onUpdate, currentUserId, showComments, onToggle
       {/* Header: User Info & Time */}
       <div className="p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Avatar src={post.author?.avatar} alt={post.author?.name || 'User'} />
+          <Link to={`/profile/${post.author?._id}`}>
+            <Avatar src={post.author?.avatar} alt={post.author?.name || 'User'} />
+          </Link>
           <div>
-            <h3 className="font-semibold text-slate-900 dark:text-zinc-100 text-sm leading-tight">
-              {post.author?.name}
-            </h3>
+            <Link to={`/profile/${post.author?._id}`}>
+              <h3 className="font-semibold text-slate-900 dark:text-zinc-100 text-sm leading-tight hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer">
+                {post.author?.name}
+              </h3>
+            </Link>
             <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
               {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
             </p>

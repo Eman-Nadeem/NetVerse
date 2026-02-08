@@ -430,3 +430,56 @@ export const getSavedPosts = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc    Get suggested users to follow
+// @route   GET /api/users/suggestions
+// @access  Private
+export const getSuggestedUsers = async (req, res, next) => {
+  try {
+    const limit = parseInt(req.query.limit) || 10;
+    const currentUser = await User.findById(req.user._id).select('following');
+
+    // Get users that:
+    // 1. Are not the current user
+    // 2. Are not already followed by current user
+    // 3. Have the most followers (popular users)
+    const suggestions = await User.aggregate([
+      {
+        $match: {
+          _id: { 
+            $ne: req.user._id, 
+            $nin: currentUser.following || []
+          },
+        },
+      },
+      {
+        $addFields: {
+          followersCount: { $size: { $ifNull: ['$followers', []] } },
+          postsCount: { $size: { $ifNull: ['$posts', []] } },
+        },
+      },
+      // Prioritize users with more followers and posts
+      { $sort: { followersCount: -1, postsCount: -1 } },
+      { $limit: limit },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          username: 1,
+          avatar: 1,
+          bio: 1,
+          followers: 1,
+          following: 1,
+          followersCount: 1,
+        },
+      },
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: suggestions,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

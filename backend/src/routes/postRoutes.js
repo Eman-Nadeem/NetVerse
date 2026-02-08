@@ -8,6 +8,7 @@ import {
   deletePost,
   getComments,
   sharePost,
+  getExplorePosts,
 } from '../controllers/postController.js';
 import { protect } from '../middleware/auth.js';
 import { validatePost, validateComment } from '../middleware/validator.js';
@@ -21,6 +22,7 @@ router.use(protect);
 // Post routes
 router.post('/', uploadMultiple, handleUploadError, validatePost, createPost);
 router.get('/', getFeed);
+router.get('/explore', getExplorePosts); // Trending/explore posts - must be before /:id
 router.get('/:id', getPost);
 router.delete('/:id', deletePost);
 router.post('/:id/like', toggleLike);
