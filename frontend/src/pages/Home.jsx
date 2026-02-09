@@ -116,7 +116,8 @@ const Home = () => {
               <PostCard
                 key={post._id}
                 post={post}
-                onUpdate={fetchPosts}
+                onUpdate={(updatedPost) => setPosts(posts.map(p => p._id === updatedPost._id ? { ...p, ...updatedPost } : p))}
+                onDelete={(deletedId) => setPosts(posts.filter(p => p._id !== deletedId))}
                 currentUserId={currentUserId}
                 showComments={openCommentsPostId === post._id}
                 onToggleComments={() => setOpenCommentsPostId(openCommentsPostId === post._id ? null : post._id)}

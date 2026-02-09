@@ -53,8 +53,25 @@ const Chats = () => {
       });
     };
 
+    // Listen for user online status changes
+    const handleUserStatusChange = (data) => {
+      setChats((prevChats) => prevChats.map(chat => ({
+        ...chat,
+        participants: chat.participants.map(p => 
+          p._id === data.userId 
+            ? { ...p, isOnline: data.status === 'online', lastSeen: data.lastSeen || new Date() }
+            : p
+        )
+      })));
+    };
+
     socket.on('newMessage', handleNewMessage);
-    return () => socket.off('newMessage', handleNewMessage);
+    socket.on('userStatusChange', handleUserStatusChange);
+    
+    return () => {
+      socket.off('newMessage', handleNewMessage);
+      socket.off('userStatusChange', handleUserStatusChange);
+    };
   }, [socket, currentUser]);
 
   const fetchChats = async () => {

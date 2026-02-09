@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import connectDB from './src/config/db.js';
 import app from './src/app.js';
 import { createSocket } from './src/config/socket.js';
+import User from './src/models/User.js';
 
 // Load environment variables
 dotenv.config();
@@ -19,6 +20,11 @@ const startServer = async () => {
     console.log('Connecting to MongoDB...');
     await connectDB();
     console.log('✅ MongoDB connected successfully');
+
+    // Reset all users to offline on server start
+    // This handles cases where server restarted while users were online
+    await User.updateMany({}, { isOnline: false });
+    console.log('✅ All users set to offline on server start');
 
     // Create HTTP server from Express app
     const httpServer = createServer(app);
@@ -36,8 +42,16 @@ const startServer = async () => {
     });
 
     // Graceful shutdown handlers
-    const gracefulShutdown = (signal) => {
+    const gracefulShutdown = async (signal) => {
       console.log(`\n⚠️  ${signal} received. Starting graceful shutdown...`);
+
+      // Set all users to offline before shutdown
+      try {
+        await User.updateMany({}, { isOnline: false, lastSeen: new Date() });
+        console.log('✅ All users set to offline');
+      } catch (error) {
+        console.error('Failed to set users offline:', error);
+      }
 
       // Close database connection
       mongoose.connection.close(() => {

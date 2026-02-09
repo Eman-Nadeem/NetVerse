@@ -62,6 +62,11 @@ const userSchema = new mongoose.Schema(
       ref: 'User',
       default: [],
     },
+    followRequests: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: 'User',
+      default: [],
+    },
     stories: [
       {
         type: mongoose.Schema.Types.ObjectId,

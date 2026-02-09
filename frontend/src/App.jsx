@@ -14,23 +14,57 @@ import Explore from './pages/Explore';
 import FollowList from './pages/FollowList';
 import Chats from './pages/Chats';
 import { useAuthStore } from './store/authStore';
-import { getSocket, emitWhenReady } from './lib/socket';
+import { useNotificationStore } from './store/notificationStore';
+import { useChatStore } from './store/chatStore';
+import { getSocket, joinUserRoom } from './lib/socket';
 import ChatRoom from './pages/ChatRoom';
 
 const App = () => {
   const { user, isAuthenticated } = useAuthStore();
+  const addNotification = useNotificationStore((state) => state.addNotification);
+  const incrementUnread = useChatStore((state) => state.incrementUnread);
+  const fetchUnreadCount = useChatStore((state) => state.fetchUnreadCount);
 
   useEffect(() => {
     useAuthStore.getState().checkAuth(); // Check auth on app load
   }, []);
 
-  // Join socket room when user is authenticated
+  // Join socket room and set up global notification listener
   useEffect(() => {
     if (isAuthenticated && user?._id) {
       localStorage.setItem('user', JSON.stringify(user));
-      emitWhenReady('join', user._id);
+      // Initialize socket and join user's notification room
+      const socket = getSocket();
+      joinUserRoom(user._id);
+
+      // Fetch initial unread chat count
+      fetchUnreadCount();
+
+      // Global listener for real-time notifications
+      const handleNewNotification = (notification) => {
+        console.log('📬 New notification received:', notification);
+        addNotification(notification);
+      };
+
+      // Global listener for new messages (increment unread badge)
+      const handleNewMessage = (message) => {
+        // Only increment if the message is not from the current user
+        if (message.sender?._id !== user._id) {
+          const msgChatId = message.chatId?._id || message.chatId;
+          console.log('💬 New message received, checking if should increment unread');
+          incrementUnread(msgChatId);
+        }
+      };
+
+      socket.on('newNotification', handleNewNotification);
+      socket.on('newMessage', handleNewMessage);
+
+      return () => {
+        socket.off('newNotification', handleNewNotification);
+        socket.off('newMessage', handleNewMessage);
+      };
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, addNotification, incrementUnread, fetchUnreadCount]);
 
   return (
     <Routes>

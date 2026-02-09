@@ -1,6 +1,9 @@
 // store/authStore.js
 import { create } from 'zustand';
 import api from '../lib/api';
+import { useNotificationStore } from './notificationStore';
+import { useChatStore } from './chatStore';
+import { disconnectSocket } from '../lib/socket';
 
 export const useAuthStore = create((set, get) => ({
   user: null,
@@ -17,8 +20,14 @@ export const useAuthStore = create((set, get) => ({
 
   // Logout Action: Clear everything
   logout: () => {
+    // Disconnect socket first to trigger offline status update
+    disconnectSocket();
+    
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    // Clear notifications and chat store on logout
+    useNotificationStore.getState().clearNotifications();
+    useChatStore.getState().resetUnread();
     set({ token: null, user: null, isAuthenticated: false, isLoading: false });
     // Optional: redirect to login via window.location.href = '/login'
   },

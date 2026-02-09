@@ -58,27 +58,23 @@ export const createStory = async (req, res, next) => {
     // For now, we'll just notify a few to avoid spam
     const followersToNotify = user.followers.slice(0, 50);
     for (const followerId of followersToNotify) {
-      await Notification.create({
-        recipient: followerId,
-        sender: req.user._id,
-        type: 'story',
-        story: story._id,
-        link: `/stories/${req.user._id}`,
-      });
+      try {
+        const notification = await Notification.create({
+          recipient: followerId,
+          sender: req.user._id,
+          type: 'story',
+          story: story._id,
+          link: `/stories/${req.user._id}`,
+        });
 
-      // Emit real-time notification
-      global.io.to(followerId.toString()).emit('newNotification', {
-        type: 'story',
-        sender: {
-          _id: req.user._id,
-          name: req.user.name,
-          username: req.user.username,
-          avatar: req.user.avatar,
-        },
-        story: {
-          _id: story._id,
-        },
-      });
+        // Populate for real-time emission
+        await notification.populate('sender', '_id name username avatar');
+
+        // Emit real-time notification with complete data
+        global.io?.to(followerId.toString()).emit('newNotification', notification);
+      } catch (notifError) {
+        console.error('Failed to create story notification:', notifError);
+      }
     }
 
     res.status(201).json({

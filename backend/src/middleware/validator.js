@@ -99,7 +99,7 @@ export const validateUpdateProfile = [
     .isLength({ max: 500 })
     .withMessage('Bio cannot be more than 500 characters'),
   body('website')
-    .optional()
+    .optional({ checkFalsy: true })
     .isURL()
     .withMessage('Website must be a valid URL'),
   validate,

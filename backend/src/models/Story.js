@@ -62,7 +62,7 @@ storySchema.pre('save', async function () {
 
 // Virtual for viewers count
 storySchema.virtual('viewersCount').get(function () {
-  return this.viewers.length;
+  return this.viewers?.length || 0;
 });
 
 // Ensure virtuals are included in JSON

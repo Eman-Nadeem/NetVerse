@@ -90,10 +90,28 @@ export const getFeed = async (req, res, next) => {
       .populate('author', '_id name username avatar')
       .populate({
         path: 'comments',
-        populate: {
-          path: 'user',
-          select: '_id name username avatar',
-        },
+        populate: [
+          {
+            path: 'user',
+            select: '_id name username avatar',
+          },
+          {
+            path: 'replies',
+            populate: [
+              {
+                path: 'user',
+                select: '_id name username avatar',
+              },
+              {
+                path: 'replies',
+                populate: {
+                  path: 'user',
+                  select: '_id name username avatar',
+                },
+              },
+            ],
+          },
+        ],
       })
       .sort({ createdAt: -1 })
       .limit(limit)
@@ -132,10 +150,28 @@ export const getPost = async (req, res, next) => {
       .populate('author', '_id name username avatar')
       .populate({
         path: 'comments',
-        populate: {
-          path: 'user',
-          select: '_id name username avatar',
-        },
+        populate: [
+          {
+            path: 'user',
+            select: '_id name username avatar',
+          },
+          {
+            path: 'replies',
+            populate: [
+              {
+                path: 'user',
+                select: '_id name username avatar',
+              },
+              {
+                path: 'replies',
+                populate: {
+                  path: 'user',
+                  select: '_id name username avatar',
+                },
+              },
+            ],
+          },
+        ],
       });
 
     if (!post) {
@@ -187,28 +223,23 @@ export const toggleLike = async (req, res, next) => {
 
       // Create notification if not own post
       if (post.author.toString() !== req.user._id.toString()) {
-        await Notification.create({
-          recipient: post.author,
-          sender: req.user._id,
-          type: 'like',
-          post: post._id,
-          link: `/post/${post._id}`,
-        });
+        try {
+          const notification = await Notification.create({
+            recipient: post.author,
+            sender: req.user._id,
+            type: 'like',
+            post: post._id,
+            link: `/post/${post._id}`,
+          });
 
-        // Emit real-time notification
-        global.io.to(post.author.toString()).emit('newNotification', {
-          type: 'like',
-          sender: {
-            _id: req.user._id,
-            name: req.user.name,
-            username: req.user.username,
-            avatar: req.user.avatar,
-          },
-          post: {
-            _id: post._id,
-            content: post.content,
-          },
-        });
+          // Populate sender for real-time emission
+          await notification.populate('sender', '_id name username avatar');
+
+          // Emit real-time notification with complete data
+          global.io?.to(post.author.toString()).emit('newNotification', notification);
+        } catch (notifError) {
+          console.error('Failed to create like notification:', notifError);
+        }
       }
 
       res.status(200).json({
@@ -245,6 +276,13 @@ export const addComment = async (req, res, next) => {
       parent: parent || null,
     });
 
+    // If it's a reply, add it to the parent comment's replies array
+    if (parent) {
+      await Comment.findByIdAndUpdate(parent, {
+        $push: { replies: comment._id }
+      });
+    }
+
     // Populate user
     await comment.populate('user', '_id name username avatar');
 
@@ -254,46 +292,43 @@ export const addComment = async (req, res, next) => {
 
     // Create notification if not own post
     if (post.author.toString() !== req.user._id.toString()) {
-      await Notification.create({
-        recipient: post.author,
-        sender: req.user._id,
-        type: parent ? 'reply' : 'comment',
-        post: post._id,
-        comment: comment._id,
-        link: `/post/${post._id}`,
-      });
+      try {
+        const notification = await Notification.create({
+          recipient: post.author,
+          sender: req.user._id,
+          type: parent ? 'reply' : 'comment',
+          post: post._id,
+          comment: comment._id,
+          content: content.substring(0, 100),
+          link: `/post/${post._id}`,
+        });
 
-      // Emit real-time notification
-      global.io.to(post.author.toString()).emit('newNotification', {
-        type: parent ? 'reply' : 'comment',
-        sender: {
-          _id: req.user._id,
-          name: req.user.name,
-          username: req.user.username,
-          avatar: req.user.avatar,
-        },
-        post: {
-          _id: post._id,
-        },
-        comment: {
-          _id: comment._id,
-          content: comment.content,
-        },
-      });
+        // Populate for real-time emission
+        await notification.populate('sender', '_id name username avatar');
+
+        // Emit real-time notification with complete data
+        global.io?.to(post.author.toString()).emit('newNotification', notification);
+      } catch (notifError) {
+        console.error('Failed to create comment notification:', notifError);
+      }
     }
 
     // If it's a reply, notify the parent comment author
     if (parent && parent.toString() !== req.user._id.toString()) {
-      const parentComment = await Comment.findById(parent);
-      if (parentComment && parentComment.user.toString() !== post.author.toString()) {
-        await Notification.create({
-          recipient: parentComment.user,
-          sender: req.user._id,
-          type: 'reply',
-          post: post._id,
-          comment: comment._id,
-          link: `/post/${post._id}`,
-        });
+      try {
+        const parentComment = await Comment.findById(parent);
+        if (parentComment && parentComment.user.toString() !== post.author.toString()) {
+          await Notification.create({
+            recipient: parentComment.user,
+            sender: req.user._id,
+            type: 'reply',
+            post: post._id,
+            comment: comment._id,
+            link: `/post/${post._id}`,
+          });
+        }
+      } catch (notifError) {
+        console.error('Failed to create reply notification:', notifError);
       }
     }
 
@@ -301,6 +336,46 @@ export const addComment = async (req, res, next) => {
       success: true,
       message: 'Comment added successfully',
       data: comment,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Update post
+// @route   PUT /api/posts/:id
+// @access  Private
+export const updatePost = async (req, res, next) => {
+  try {
+    const { content } = req.body;
+    const post = await Post.findById(req.params.id);
+
+    if (!post) {
+      return res.status(404).json({
+        success: false,
+        message: 'Post not found',
+      });
+    }
+
+    // Check if user owns the post
+    if (post.author.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to edit this post',
+      });
+    }
+
+    // Update content
+    post.content = content;
+    await post.save();
+
+    // Populate author
+    await post.populate('author', '_id name username avatar');
+
+    res.status(200).json({
+      success: true,
+      message: 'Post updated successfully',
+      data: post,
     });
   } catch (error) {
     next(error);
@@ -511,10 +586,28 @@ export const getExplorePosts = async (req, res, next) => {
     // Populate comments with user info
     await Post.populate(posts, {
       path: 'comments',
-      populate: {
-        path: 'user',
-        select: '_id name username avatar',
-      },
+      populate: [
+        {
+          path: 'user',
+          select: '_id name username avatar',
+        },
+        {
+          path: 'replies',
+          populate: [
+            {
+              path: 'user',
+              select: '_id name username avatar',
+            },
+            {
+              path: 'replies',
+              populate: {
+                path: 'user',
+                select: '_id name username avatar',
+              },
+            },
+          ],
+        },
+      ],
     });
 
     // Get total count

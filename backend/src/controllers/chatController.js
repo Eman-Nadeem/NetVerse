@@ -60,7 +60,7 @@ export const getChats = async (req, res, next) => {
     const chats = await Chat.find({
       participants: req.user._id,
     })
-      .populate('participants', '_id name username avatar isOnline')
+      .populate('participants', '_id name username avatar isOnline lastSeen')
       .populate('lastMessage')
       .sort({ updatedAt: -1 });
 
@@ -79,7 +79,7 @@ export const getChats = async (req, res, next) => {
 export const getChat = async (req, res, next) => {
   try {
     const chat = await Chat.findById(req.params.id)
-      .populate('participants', '_id name username avatar isOnline')
+      .populate('participants', '_id name username avatar isOnline lastSeen isVerified')
       .populate('lastMessage');
 
     if (!chat) {
@@ -153,27 +153,31 @@ export const sendMessage = async (req, res, next) => {
         const currentCount = chat.unreadCount.get(participantId.toString()) || 0;
         chat.unreadCount.set(participantId.toString(), currentCount + 1);
 
-        // Create notification
-        const notification = await Notification.create({
-          recipient: participantId,
-          sender: req.user._id,
-          type: 'message',
-          chat: chat._id,
-          content: content.substring(0, 100),
-          link: `/chats/${chat._id}`,
-        });
+        // Create notification and emit real-time events
+        try {
+          const notification = await Notification.create({
+            recipient: participantId,
+            sender: req.user._id,
+            type: 'message',
+            chat: chat._id,
+            content: content.substring(0, 100),
+            link: `/chats/${chat._id}`,
+          });
 
-        // Populate sender for real-time notification
-        await notification.populate('sender', '_id name username avatar');
-        
-        // Emit real-time notification and message
-        const targetRoom = participantId.toString();
-        
-        global.io.to(targetRoom).emit('newNotification', notification);
-        global.io.to(targetRoom).emit('newMessage', {
-          chatId: chat._id.toString(),
-          message,
-        });
+          // Populate sender for real-time notification
+          await notification.populate('sender', '_id name username avatar');
+          
+          // Emit real-time notification and message
+          const targetRoom = participantId.toString();
+          
+          global.io?.to(targetRoom).emit('newNotification', notification);
+          global.io?.to(targetRoom).emit('newMessage', {
+            chatId: chat._id.toString(),
+            message,
+          });
+        } catch (notifError) {
+          console.error('Failed to create message notification:', notifError);
+        }
       }
     }
     await chat.save();
@@ -327,7 +331,7 @@ export const markAsRead = async (req, res, next) => {
     }
 
     // Mark all messages as read
-    await Message.updateMany(
+    const result = await Message.updateMany(
       {
         chat: req.params.id,
         sender: { $ne: req.user._id },
@@ -342,6 +346,19 @@ export const markAsRead = async (req, res, next) => {
     // Reset unread count
     chat.unreadCount.set(req.user._id.toString(), 0);
     await chat.save();
+
+    // Always emit read receipt to other participants so they see blue ticks
+    for (const participantId of chat.participants) {
+      const participantIdStr = participantId.toString();
+      if (participantIdStr !== req.user._id.toString()) {
+        // Notify the sender(s) that their messages have been read
+        console.log(`📖 Emitting messagesRead to ${participantIdStr} for chat ${req.params.id}`);
+        global.io?.to(participantIdStr).emit('messagesRead', {
+          chatId: req.params.id,
+          readBy: req.user._id,
+        });
+      }
+    }
 
     res.status(200).json({
       success: true,

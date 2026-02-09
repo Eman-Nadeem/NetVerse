@@ -185,7 +185,8 @@ const Explore = () => {
                     )}
                     <PostCard
                       post={post}
-                      onUpdate={fetchTrendingPosts}
+                      onUpdate={(updatedPost) => setTrendingPosts(trendingPosts.map(p => p._id === updatedPost._id ? { ...p, ...updatedPost } : p))}
+                      onDelete={(deletedId) => setTrendingPosts(trendingPosts.filter(p => p._id !== deletedId))}
                       currentUserId={currentUser?._id}
                     />
                   </div>

@@ -22,9 +22,13 @@ export const getUserProfile = async (req, res, next) => {
 
     // Check if current user is following this user
     let isFollowing = false;
+    let isRequested = false;
     if (req.user) {
       isFollowing = user.followers.some(
         (follower) => follower._id.toString() === req.user._id.toString()
+      );
+      isRequested = user.followRequests?.some(
+        (requesterId) => requesterId.toString() === req.user._id.toString()
       );
     }
 
@@ -33,6 +37,7 @@ export const getUserProfile = async (req, res, next) => {
       data: {
         ...user.toObject(),
         isFollowing,
+        isRequested,
       },
     });
   } catch (error) {
@@ -45,7 +50,7 @@ export const getUserProfile = async (req, res, next) => {
 // @access  Private
 export const updateProfile = async (req, res, next) => {
   try {
-    const { name, username, bio, website, location, coverPhoto } = req.body;
+    const { name, username, bio, website, location, coverPhoto, accountType } = req.body;
     let avatarUrl = req.body.avatar;
 
     // Get current user
@@ -86,6 +91,7 @@ export const updateProfile = async (req, res, next) => {
     if (location !== undefined) updateFields.location = location;
     if (avatarUrl) updateFields.avatar = avatarUrl;
     if (coverPhoto !== undefined) updateFields.coverPhoto = coverPhoto;
+    if (accountType && ['public', 'private'].includes(accountType)) updateFields.accountType = accountType;
 
     // Check if username is taken by another user
     if (username) {
@@ -149,6 +155,7 @@ export const toggleFollow = async (req, res, next) => {
     // Check if already following
     const currentUser = await User.findById(currentUserId);
     const isFollowing = currentUser.following.includes(targetUserId);
+    const hasRequested = targetUser.followRequests?.includes(currentUserId);
 
     if (isFollowing) {
       // Unfollow
@@ -169,42 +176,209 @@ export const toggleFollow = async (req, res, next) => {
         message: 'Unfollowed successfully',
         data: {
           isFollowing: false,
+          isRequested: false,
+        },
+      });
+    } else if (hasRequested) {
+      // Cancel follow request
+      targetUser.followRequests.pull(currentUserId);
+      await targetUser.save();
+
+      // Delete follow request notification
+      await Notification.deleteMany({
+        recipient: targetUserId,
+        sender: currentUserId,
+        type: 'followRequest',
+      });
+
+      res.status(200).json({
+        success: true,
+        message: 'Follow request cancelled',
+        data: {
+          isFollowing: false,
+          isRequested: false,
+        },
+      });
+    } else if (targetUser.accountType === 'private') {
+      // Send follow request for private accounts
+      targetUser.followRequests.push(currentUserId);
+      await targetUser.save();
+
+      // Create follow request notification
+      try {
+        const notification = await Notification.create({
+          recipient: targetUserId,
+          sender: currentUserId,
+          type: 'followRequest',
+          link: `/profile/${currentUserId}`,
+        });
+
+        await notification.populate('sender', '_id name username avatar');
+        const targetRoom = targetUserId.toString();
+        global.io?.to(targetRoom).emit('newNotification', notification);
+      } catch (notifError) {
+        console.error('Failed to create follow request notification:', notifError);
+      }
+
+      res.status(200).json({
+        success: true,
+        message: 'Follow request sent',
+        data: {
+          isFollowing: false,
+          isRequested: true,
         },
       });
     } else {
-      // Follow
+      // Follow public account directly
       currentUser.following.push(targetUserId);
       targetUser.followers.push(currentUserId);
 
       await Promise.all([currentUser.save(), targetUser.save()]);
 
       // Create follow notification
-      await Notification.create({
-        recipient: targetUserId,
-        sender: currentUserId,
-        type: 'follow',
-        link: `/profile/${currentUserId}`,
-      });
+      try {
+        const notification = await Notification.create({
+          recipient: targetUserId,
+          sender: currentUserId,
+          type: 'follow',
+          link: `/profile/${currentUserId}`,
+        });
 
-      // Emit real-time notification
-      global.io.to(targetUserId.toString()).emit('newNotification', {
-        type: 'follow',
-        sender: {
-          _id: currentUserId,
-          name: currentUser.name,
-          username: currentUser.username,
-          avatar: currentUser.avatar,
-        },
-      });
+        // Populate sender for real-time emission
+        await notification.populate('sender', '_id name username avatar');
+
+        // Emit real-time notification with complete data
+        const targetRoom = targetUserId.toString();
+        console.log('📢 Emitting follow notification to room:', targetRoom);
+        global.io?.to(targetRoom).emit('newNotification', notification);
+      } catch (notifError) {
+        console.error('Failed to create follow notification:', notifError);
+      }
 
       res.status(200).json({
         success: true,
         message: 'Followed successfully',
         data: {
           isFollowing: true,
+          isRequested: false,
         },
       });
     }
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Accept follow request
+// @route   POST /api/users/:id/accept
+// @access  Private
+export const acceptFollowRequest = async (req, res, next) => {
+  try {
+    const { id: requesterId } = req.params;
+    const currentUserId = req.user._id;
+
+    const currentUser = await User.findById(currentUserId);
+    const requester = await User.findById(requesterId);
+
+    if (!requester) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    // Check if request exists
+    if (!currentUser.followRequests?.includes(requesterId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'No follow request from this user',
+      });
+    }
+
+    // Remove from follow requests
+    currentUser.followRequests.pull(requesterId);
+    // Add to followers
+    currentUser.followers.push(requesterId);
+    // Add to requester's following
+    requester.following.push(currentUserId);
+
+    await Promise.all([currentUser.save(), requester.save()]);
+
+    // Delete the follow request notification
+    await Notification.deleteMany({
+      recipient: currentUserId,
+      sender: requesterId,
+      type: 'followRequest',
+    });
+
+    // Create a new "follow" notification for the requester (they are now following)
+    try {
+      const notification = await Notification.create({
+        recipient: currentUserId,
+        sender: requesterId,
+        type: 'follow',
+        link: `/profile/${requesterId}`,
+      });
+      await notification.populate('sender', '_id name username avatar');
+    } catch (notifError) {
+      console.error('Failed to create follow notification:', notifError);
+    }
+
+    // Notify the requester that their request was accepted
+    try {
+      const acceptNotif = await Notification.create({
+        recipient: requesterId,
+        sender: currentUserId,
+        type: 'followAccepted',
+        link: `/profile/${currentUserId}`,
+      });
+      await acceptNotif.populate('sender', '_id name username avatar');
+      global.io?.to(requesterId.toString()).emit('newNotification', acceptNotif);
+    } catch (notifError) {
+      console.error('Failed to create accept notification:', notifError);
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Follow request accepted',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Decline follow request
+// @route   POST /api/users/:id/decline
+// @access  Private
+export const declineFollowRequest = async (req, res, next) => {
+  try {
+    const { id: requesterId } = req.params;
+    const currentUserId = req.user._id;
+
+    const currentUser = await User.findById(currentUserId);
+
+    if (!currentUser.followRequests?.includes(requesterId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'No follow request from this user',
+      });
+    }
+
+    // Remove from follow requests
+    currentUser.followRequests.pull(requesterId);
+    await currentUser.save();
+
+    // Delete the follow request notification
+    await Notification.deleteMany({
+      recipient: currentUserId,
+      sender: requesterId,
+      type: 'followRequest',
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Follow request declined',
+    });
   } catch (error) {
     next(error);
   }
@@ -337,8 +511,54 @@ export const getUserPosts = async (req, res, next) => {
       });
     }
 
+    // Check if private account and not following
+    if (user.accountType === 'private') {
+      const isOwnProfile = req.user && req.user._id.toString() === user._id.toString();
+      const isFollowing = req.user && user.followers.some(
+        (followerId) => followerId.toString() === req.user._id.toString()
+      );
+
+      if (!isOwnProfile && !isFollowing) {
+        return res.status(200).json({
+          success: true,
+          data: [],
+          pagination: {
+            page,
+            limit,
+            total: 0,
+            pages: 0,
+          },
+        });
+      }
+    }
+
     const posts = await Post.find({ author: req.params.id })
       .populate('author', '_id name username avatar')
+      .populate({
+        path: 'comments',
+        populate: [
+          {
+            path: 'user',
+            select: '_id name username avatar',
+          },
+          {
+            path: 'replies',
+            populate: [
+              {
+                path: 'user',
+                select: '_id name username avatar',
+              },
+              {
+                path: 'replies',
+                populate: {
+                  path: 'user',
+                  select: '_id name username avatar',
+                },
+              },
+            ],
+          },
+        ],
+      })
       .sort({ createdAt: -1 })
       .limit(limit)
       .skip((page - 1) * limit);

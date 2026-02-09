@@ -6,11 +6,16 @@ import { MessageBubble } from '../components/chat/MessageBubble';
 import api from '../lib/api';
 import { getSocket, emitWhenReady } from '../lib/socket';
 import { useAuthStore } from '../store/authStore';
+import { useChatStore } from '../store/chatStore';
+import { formatDistanceToNow } from 'date-fns';
 
 const ChatRoom = () => {
   const { chatId } = useParams();
   const navigate = useNavigate();
   const { user: currentUser } = useAuthStore();
+  const fetchUnreadCount = useChatStore((state) => state.fetchUnreadCount);
+  const setActiveChatId = useChatStore((state) => state.setActiveChatId);
+  const clearActiveChatId = useChatStore((state) => state.clearActiveChatId);
   const socket = getSocket();
   
   const [messages, setMessages] = useState([]);
@@ -21,6 +26,16 @@ const ChatRoom = () => {
   
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
+
+  // Set active chat ID on mount, clear on unmount
+  useEffect(() => {
+    if (chatId) {
+      setActiveChatId(chatId);
+    }
+    return () => {
+      clearActiveChatId();
+    };
+  }, [chatId, setActiveChatId, clearActiveChatId]);
 
   // Scroll logic
   const scrollToBottom = (behavior = "smooth") => {
@@ -42,6 +57,8 @@ const ChatRoom = () => {
         emitWhenReady('join', currentUser._id);
         
         await api.put(`/chats/${chatId}/read`);
+        // Refresh unread count after marking as read
+        fetchUnreadCount();
         
         // Initial scroll
         setTimeout(() => scrollToBottom("auto"), 100);
@@ -74,14 +91,44 @@ const ChatRoom = () => {
       }
     };
 
+    // Handle real-time read receipts - mark all own messages as read
+    const handleMessagesRead = (data) => {
+      console.log('📖 Received messagesRead event:', data, 'Current chatId:', chatId);
+      if (String(data.chatId) === String(chatId)) {
+        setMessages(prev => prev.map(msg => {
+          const senderId = typeof msg.sender === 'object' ? msg.sender._id : msg.sender;
+          // Mark messages sent by current user as read (compare as strings)
+          if (String(senderId) === String(currentUser._id)) {
+            return { ...msg, isRead: true };
+          }
+          return msg;
+        }));
+      }
+    };
+
+    // Handle user online status changes
+    const handleUserStatusChange = (data) => {
+      if (data.userId === otherUser?._id) {
+        setOtherUser(prev => ({
+          ...prev,
+          isOnline: data.status === 'online',
+          lastSeen: data.lastSeen || new Date(),
+        }));
+      }
+    };
+
     socket.on('newMessage', handleNewMessage);
     socket.on('userTyping', handleUserTyping);
+    socket.on('messagesRead', handleMessagesRead);
+    socket.on('userStatusChange', handleUserStatusChange);
     
     return () => {
       socket.off('newMessage', handleNewMessage);
       socket.off('userTyping', handleUserTyping);
+      socket.off('messagesRead', handleMessagesRead);
+      socket.off('userStatusChange', handleUserStatusChange);
     };
-  }, [socket, chatId, otherUser]);
+  }, [socket, chatId, otherUser, currentUser]);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -134,7 +181,14 @@ const ChatRoom = () => {
             {otherUser?.isVerified && <ShieldCheck className="w-3.5 h-3.5 text-indigo-500" />}
           </h2>
           <p className={`text-xs font-bold uppercase tracking-widest ${isTyping ? 'text-indigo-500 animate-pulse' : 'text-slate-400'}`}>
-            {isTyping ? 'typing...' : (otherUser?.isOnline ? 'Active Now' : 'Offline')}
+            {isTyping 
+              ? 'typing...' 
+              : otherUser?.isOnline 
+                ? 'Active Now' 
+                : otherUser?.lastSeen 
+                  ? `Last seen ${formatDistanceToNow(new Date(otherUser.lastSeen), { addSuffix: true })}`
+                  : 'Offline'
+            }
           </p>
         </div>
         
@@ -144,7 +198,7 @@ const ChatRoom = () => {
       </div>
 
       {/* Messages: Modern Spacing */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-2 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#1f2937_1px,transparent_1px)] [bg-size:24px_24px]">
+      <div className="flex-1 overflow-y-auto p-6 space-y-2 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#1f2937_1px,transparent_1px)] [bg-size:24px_24px] scrollbar-hide">
         {messages.map((msg) => (
           <MessageBubble
             key={msg._id}

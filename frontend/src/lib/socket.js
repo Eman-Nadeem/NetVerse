@@ -20,14 +20,18 @@ export const initializeSocket = () => {
   });
 
   socket.on('connect', () => {
+    console.log('🔌 Socket connected:', socket.id);
     // Re-join room on reconnection
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     if (user._id) {
       socket.emit('join', user._id);
+      console.log('📢 Joined notification room:', user._id);
     }
   });
 
-  socket.on('disconnect', () => {});
+  socket.on('disconnect', () => {
+    console.log('🔴 Socket disconnected');
+  });
 
   socket.on('connect_error', (error) => {
     console.error('Socket connection error:', error.message);
@@ -44,6 +48,29 @@ export const getSocket = () => {
     socketInstance = initializeSocket();
   }
   return socketInstance;
+};
+
+// Join room for the current user - call this after login or when user data changes
+export const joinUserRoom = (userId) => {
+  const socket = getSocket();
+  if (socket.connected && userId) {
+    socket.emit('join', userId);
+    console.log('📢 Joined notification room:', userId);
+  } else if (userId) {
+    socket.once('connect', () => {
+      socket.emit('join', userId);
+      console.log('📢 Joined notification room (after connect):', userId);
+    });
+  }
+};
+
+// Disconnect socket on logout - this will trigger offline status update
+export const disconnectSocket = () => {
+  if (socketInstance) {
+    console.log('🔴 Disconnecting socket on logout');
+    socketInstance.disconnect();
+    socketInstance = null;
+  }
 };
 
 // Helper to ensure socket is connected before emitting

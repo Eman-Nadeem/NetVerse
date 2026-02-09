@@ -5,6 +5,7 @@ import {
   getPost,
   toggleLike,
   addComment,
+  updatePost,
   deletePost,
   getComments,
   sharePost,
@@ -24,6 +25,7 @@ router.post('/', uploadMultiple, handleUploadError, validatePost, createPost);
 router.get('/', getFeed);
 router.get('/explore', getExplorePosts); // Trending/explore posts - must be before /:id
 router.get('/:id', getPost);
+router.put('/:id', updatePost);
 router.delete('/:id', deletePost);
 router.post('/:id/like', toggleLike);
 router.post('/:id/comment', validateComment, addComment);
