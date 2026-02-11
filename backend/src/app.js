@@ -1,5 +1,4 @@
 import express from 'express';
-import dotenv from 'dotenv';
 import cors from 'cors';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 import authRoutes from './routes/authRoutes.js';
@@ -8,8 +7,6 @@ import postRoutes from './routes/postRoutes.js';
 import storyRoutes from './routes/storyRoutes.js';
 import chatRoutes from './routes/chatRoute.js';
 import notificationRoutes from './routes/notificationRoute.js';
-
-dotenv.config(); //load .env variables
 
 const app = express();
 
